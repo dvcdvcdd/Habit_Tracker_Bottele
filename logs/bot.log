@@ -82,3 +82,17 @@
 2026-05-07 16:22:40 | INFO     | __main__ — Bot siap menerima pesan. Tekan Ctrl+C untuk berhenti.
 2026-05-07 16:22:40 | INFO     | __main__ — ==================================================
 2026-05-07 16:22:52 | INFO     | app.handlers.start — User /start: 6005721006 (@zakxyz1945)
+2026-05-07 16:27:40 | INFO     | apscheduler.executors.default — Running job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 16:32:40 PDT)" (scheduled at 2026-05-07 16:27:40.859357-07:00)
+2026-05-07 16:27:40 | INFO     | apscheduler.executors.default — Job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 16:32:40 PDT)" executed successfully
+2026-05-07 16:32:40 | INFO     | apscheduler.executors.default — Running job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 16:37:40 PDT)" (scheduled at 2026-05-07 16:32:40.859357-07:00)
+2026-05-07 16:32:40 | INFO     | apscheduler.executors.default — Job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 16:37:40 PDT)" executed successfully
+2026-05-07 16:32:47 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 16:32:47 | WARNING  | aiogram.dispatcher — Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8315641064)
+2026-05-07 16:32:47 | INFO     | __main__ — Memulai graceful shutdown...
+2026-05-07 16:32:47 | INFO     | __main__ — Mematikan scheduler...
+2026-05-07 16:32:47 | INFO     | __main__ — Scheduler berhenti.
+2026-05-07 16:32:47 | INFO     | __main__ — Menutup koneksi bot...
+2026-05-07 16:32:47 | INFO     | __main__ — Koneksi bot ditutup.
+2026-05-07 16:32:47 | INFO     | __main__ — Bot berhenti dengan bersih.
+2026-05-07 16:32:47 | INFO     | __main__ — ==================================================
+2026-05-07 16:32:47 | INFO     | apscheduler.scheduler — Scheduler has been shut down
