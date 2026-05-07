@@ -1,0 +1,476 @@
+# app/handlers/habit_edit.py
+
+import logging
+
+from aiogram import Router
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
+
+from app.database.queries import (
+    get_habit_by_id_any_status,
+    get_all_habits_including_paused,
+    update_habit_name,
+    update_habit_schedule,
+    pause_habit,
+    resume_habit,
+    soft_delete_habit,
+    update_last_active,
+)
+from app.keyboards.inline import (
+    CB_PREFIX_HABIT_DETAIL,
+    CB_PREFIX_EDIT_NAME,
+    CB_PREFIX_EDIT_SCHEDULE,
+    CB_PREFIX_PAUSE,
+    CB_PREFIX_RESUME,
+    CB_PREFIX_DELETE,
+    CB_PREFIX_DELETE_CONFIRM,
+    CB_MENU_HABITS,
+    kb_habit_detail,
+    kb_habit_picker,
+    kb_edit_schedule,
+    kb_back_to_main,
+    kb_delete_confirm,
+)
+from app.keyboards.reply import kb_cancel, kb_remove
+from app.services.habit_service import (
+    format_schedule_display,
+    build_habit_list_text,
+    get_habits_with_status,
+)
+from app.utils.helpers import (
+    sanitize_text,
+    is_valid_habit_name,
+    escape_markdown,
+    format_streak,
+)
+
+logger = logging.getLogger(__name__)
+
+router = Router()
+
+
+class EditHabitStates(StatesGroup):
+    waiting_new_name = State()
+
+
+# ---------------------------------------------------------------------------
+# Helper: ambil raw is_active dari database
+# ---------------------------------------------------------------------------
+
+async def _get_raw_active_status(habit_id: int, user_id: int) -> int:
+    from app.database.init_db import get_db_connection
+    async with get_db_connection() as db:
+        async with db.execute(
+            "SELECT is_active FROM habits WHERE habit_id = ? AND user_id = ?",
+            (habit_id, user_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row["is_active"] if row else 0
+
+
+# ---------------------------------------------------------------------------
+# Daftar habit (dengan tombol detail per habit)
+# ---------------------------------------------------------------------------
+
+@router.callback_query(lambda c: c.data == CB_MENU_HABITS)
+async def handle_show_habits(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    habits_with_status = await get_habits_with_status(user_id)
+    text = build_habit_list_text(habits_with_status)
+
+    all_habits = await get_all_habits_including_paused(user_id)
+
+    if all_habits:
+        await callback.message.edit_text(
+            text=text + "\n\n_Ketuk habit untuk melihat detail._",
+            parse_mode="Markdown",
+            reply_markup=kb_habit_picker(all_habits, CB_PREFIX_HABIT_DETAIL),
+        )
+    else:
+        await callback.message.edit_text(
+            text=text,
+            parse_mode="Markdown",
+            reply_markup=kb_back_to_main(),
+        )
+
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Detail satu habit
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_HABIT_DETAIL}:")
+)
+async def handle_habit_detail(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, user_id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    raw_status = await _get_raw_active_status(habit_id, user_id)
+    is_paused = (raw_status == 2)
+
+    schedule_text = format_schedule_display(habit.schedule)
+    streak_text = format_streak(habit.current_streak)
+    status_text = "⏸ *DI-PAUSE*" if is_paused else "🟢 Aktif"
+
+    text = (
+        f"📌 *Detail Habit*\n"
+        f"\n"
+        f"📝 Nama     : *{escape_markdown(habit.name)}*\n"
+        f"📅 Jadwal   : {schedule_text}\n"
+        f"🔥 Streak   : {streak_text}\n"
+        f"🏆 Terbaik  : {habit.longest_streak} hari\n"
+        f"📊 Status   : {status_text}\n"
+        f"📆 Dibuat   : {habit.created_at}\n"
+    )
+
+    await callback.message.edit_text(
+        text=text,
+        parse_mode="Markdown",
+        reply_markup=kb_habit_detail(habit_id, is_paused),
+    )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Edit Nama
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_EDIT_NAME}:")
+)
+async def handle_edit_name_start(
+    callback: CallbackQuery,
+    state: FSMContext,
+) -> None:
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, callback.from_user.id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    await callback.message.edit_text(
+        text=(
+            f"✏️ *Edit Nama Habit*\n\n"
+            f"Nama sekarang: *{escape_markdown(habit.name)}*\n\n"
+            f"Ketik nama baru:"
+        ),
+        parse_mode="Markdown",
+    )
+
+    await callback.message.answer(
+        text="Ketik nama baru atau tekan Batal:",
+        reply_markup=kb_cancel(),
+    )
+
+    await state.update_data(edit_habit_id=habit_id)
+    await state.set_state(EditHabitStates.waiting_new_name)
+    await callback.answer()
+
+
+@router.message(EditHabitStates.waiting_new_name)
+async def handle_edit_name_input(
+    message: Message,
+    state: FSMContext,
+) -> None:
+    user_input = message.text.strip() if message.text else ""
+
+    if user_input == "❌ Batal":
+        await state.clear()
+        await message.answer(text="Dibatalkan.", reply_markup=kb_remove())
+        await message.answer(
+            text="Kembali ke menu:",
+            reply_markup=kb_back_to_main(),
+        )
+        return
+
+    clean_name = sanitize_text(user_input)
+    is_valid, error_msg = is_valid_habit_name(clean_name)
+
+    if not is_valid:
+        await message.answer(
+            text=f"⚠️ {error_msg}\n\nCoba lagi:",
+            reply_markup=kb_cancel(),
+        )
+        return
+
+    data = await state.get_data()
+    habit_id = data.get("edit_habit_id")
+
+    if not habit_id:
+        await state.clear()
+        await message.answer(
+            text="Terjadi kesalahan. Coba lagi dari menu.",
+            reply_markup=kb_remove(),
+        )
+        return
+
+    user_id = message.from_user.id
+    success = await update_habit_name(habit_id, user_id, clean_name)
+    await state.clear()
+
+    if success:
+        await update_last_active(user_id)
+        safe_name = escape_markdown(clean_name)
+        await message.answer(
+            text=f'✅ Nama habit berhasil diubah menjadi *"{safe_name}"*',
+            parse_mode="Markdown",
+            reply_markup=kb_remove(),
+        )
+        logger.info(f"User {user_id} edit nama habit {habit_id} → {clean_name}")
+    else:
+        await message.answer(
+            text="⚠️ Gagal mengubah nama. Habit tidak ditemukan.",
+            reply_markup=kb_remove(),
+        )
+
+    await message.answer(
+        text="Kembali ke menu:",
+        reply_markup=kb_back_to_main(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Edit Jadwal
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_EDIT_SCHEDULE}:")
+    and "_" not in c.data.split(":")[0].replace(CB_PREFIX_EDIT_SCHEDULE, "")
+)
+async def handle_edit_schedule_start(callback: CallbackQuery) -> None:
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, callback.from_user.id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    current_schedule = format_schedule_display(habit.schedule)
+
+    await callback.message.edit_text(
+        text=(
+            f"📅 *Edit Jadwal*\n\n"
+            f"Habit: *{escape_markdown(habit.name)}*\n"
+            f"Jadwal sekarang: {current_schedule}\n\n"
+            f"Pilih jadwal baru:"
+        ),
+        parse_mode="Markdown",
+        reply_markup=kb_edit_schedule(habit_id),
+    )
+    await callback.answer()
+
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_EDIT_SCHEDULE}_")
+)
+async def handle_edit_schedule_pick(callback: CallbackQuery) -> None:
+    try:
+        parts = callback.data.split(":")
+        habit_id = int(parts[1])
+        schedule_raw = parts[0]
+        schedule = schedule_raw.replace(f"{CB_PREFIX_EDIT_SCHEDULE}_", "")
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    user_id = callback.from_user.id
+    success = await update_habit_schedule(habit_id, user_id, schedule)
+
+    if success:
+        await update_last_active(user_id)
+        schedule_text = format_schedule_display(schedule)
+        await callback.message.edit_text(
+            text=(
+                f"✅ Jadwal berhasil diubah ke *{schedule_text}*\n\n"
+                f"_Streak tetap terjaga._"
+            ),
+            parse_mode="Markdown",
+            reply_markup=kb_back_to_main(),
+        )
+        logger.info(f"User {user_id} edit jadwal habit {habit_id} → {schedule}")
+    else:
+        await callback.message.edit_text(
+            text="⚠️ Gagal mengubah jadwal.",
+            reply_markup=kb_back_to_main(),
+        )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Pause Habit
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_PAUSE}:")
+)
+async def handle_pause_habit(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, user_id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    success = await pause_habit(habit_id, user_id)
+
+    if success:
+        await update_last_active(user_id)
+        await callback.message.edit_text(
+            text=(
+                f"⏸ *Habit di-pause*\n\n"
+                f"Habit *{escape_markdown(habit.name)}* tidak akan muncul "
+                f"di check-in harian sampai kamu aktifkan kembali.\n\n"
+                f"_Streak kamu tetap aman selama di-pause._"
+            ),
+            parse_mode="Markdown",
+            reply_markup=kb_back_to_main(),
+        )
+        logger.info(f"User {user_id} pause habit {habit_id}")
+    else:
+        await callback.message.edit_text(
+            text="⚠️ Gagal pause habit.",
+            reply_markup=kb_back_to_main(),
+        )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Resume Habit
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_RESUME}:")
+)
+async def handle_resume_habit(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, user_id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    success = await resume_habit(habit_id, user_id)
+
+    if success:
+        await update_last_active(user_id)
+        await callback.message.edit_text(
+            text=(
+                f"▶️ *Habit diaktifkan kembali*\n\n"
+                f"Habit *{escape_markdown(habit.name)}* sudah aktif lagi "
+                f"dan akan muncul di check-in harian.\n\n"
+                f"_Streak sebelumnya: {format_streak(habit.current_streak)}_"
+            ),
+            parse_mode="Markdown",
+            reply_markup=kb_back_to_main(),
+        )
+        logger.info(f"User {user_id} resume habit {habit_id}")
+    else:
+        await callback.message.edit_text(
+            text="⚠️ Gagal mengaktifkan habit.",
+            reply_markup=kb_back_to_main(),
+        )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Hapus habit (dari detail)
+# ---------------------------------------------------------------------------
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_DELETE}:")
+    and "confirm" not in c.data
+)
+async def handle_delete_from_detail(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    habit = await get_habit_by_id_any_status(habit_id, user_id)
+    if habit is None:
+        await callback.answer("Habit tidak ditemukan.", show_alert=True)
+        return
+
+    schedule_display = format_schedule_display(habit.schedule)
+
+    await callback.message.edit_text(
+        text=(
+            f"🗑 *Konfirmasi Hapus*\n\n"
+            f"Kamu yakin ingin menghapus habit ini?\n\n"
+            f"📌 Nama   : *{escape_markdown(habit.name)}*\n"
+            f"📅 Jadwal : {schedule_display}\n"
+            f"🔥 Streak : {habit.current_streak} hari\n\n"
+            f"⚠️ _Streak akan hilang. Checkin lama tetap tersimpan._"
+        ),
+        parse_mode="Markdown",
+        reply_markup=kb_delete_confirm(habit_id, habit.name),
+    )
+    await callback.answer()
+
+
+@router.callback_query(
+    lambda c: c.data and c.data.startswith(f"{CB_PREFIX_DELETE_CONFIRM}:")
+)
+async def handle_delete_confirm(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    try:
+        habit_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Terjadi kesalahan.", show_alert=True)
+        return
+
+    success = await soft_delete_habit(habit_id, user_id)
+
+    if success:
+        await update_last_active(user_id)
+        await callback.message.edit_text(
+            text="✅ Habit berhasil dihapus.",
+            parse_mode="Markdown",
+            reply_markup=kb_back_to_main(),
+        )
+        logger.info(f"User {user_id} hapus habit {habit_id}")
+    else:
+        await callback.message.edit_text(
+            text="⚠️ Gagal menghapus habit.",
+            reply_markup=kb_back_to_main(),
+        )
+    await callback.answer()
