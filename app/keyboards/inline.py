@@ -12,6 +12,7 @@ CB_MENU_CHECKIN     = "menu:checkin"
 CB_MENU_HABITS      = "menu:habits"
 CB_MENU_STATS       = "menu:stats"
 CB_MENU_SUMMARY     = "menu:summary"
+CB_MENU_PROFILE     = "menu:profile"
 
 # Habit actions
 CB_HABIT_ADD        = "habit:add"
@@ -37,41 +38,43 @@ CB_REMINDER_SET     = "reminder:set"
 
 def kb_main_menu() -> InlineKeyboardMarkup:
     """
-    Keyboard untuk menu utama bot.
-
-    Layout:
-    [✅ Check-in Hari Ini]
-    [📋 Habit Saya    ] [➕ Tambah Habit]
-    [📊 Statistik     ] [📝 Summary Hari Ini]
+    Keyboard menu utama.
     """
     builder = InlineKeyboardBuilder()
 
     builder.row(
         InlineKeyboardButton(
-            text          = "✅ Check-in Hari Ini",
-            callback_data = CB_MENU_CHECKIN,
+            text="✅ Check-in Hari Ini",
+            callback_data=CB_MENU_CHECKIN,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text          = "📋 Habit Saya",
-            callback_data = CB_MENU_HABITS,
+            text="📋 Habit Saya",
+            callback_data=CB_MENU_HABITS,
         ),
         InlineKeyboardButton(
-            text          = "➕ Tambah Habit",
-            callback_data = CB_HABIT_ADD,
+            text="➕ Tambah Habit",
+            callback_data=CB_HABIT_ADD,
         ),
     )
 
     builder.row(
         InlineKeyboardButton(
-            text          = "📊 Statistik",
-            callback_data = CB_MENU_STATS,
+            text="📊 Statistik",
+            callback_data=CB_MENU_STATS,
         ),
         InlineKeyboardButton(
-            text          = "📝 Summary",
-            callback_data = CB_MENU_SUMMARY,
+            text="📝 Summary",
+            callback_data=CB_MENU_SUMMARY,
+        ),
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="👤 Profile",
+            callback_data=CB_MENU_PROFILE,
         ),
     )
 
@@ -322,6 +325,32 @@ def kb_back_to_main() -> InlineKeyboardMarkup:
             text          = "🏠 Menu Utama",
             callback_data = CB_BACK_MAIN,
         )
+    )
+
+    return builder.as_markup()
+
+def kb_profile_menu() -> InlineKeyboardMarkup:
+    """
+    Keyboard di halaman profile.
+    """
+    builder = InlineKeyboardBuilder()
+
+    builder.row(
+        InlineKeyboardButton(
+            text="⏰ Ubah Jam Reminder",
+            callback_data=CB_REMINDER_SET,
+        )
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="📋 Habit Saya",
+            callback_data=CB_MENU_HABITS,
+        ),
+        InlineKeyboardButton(
+            text="🏠 Menu Utama",
+            callback_data=CB_BACK_MAIN,
+        ),
     )
 
     return builder.as_markup()

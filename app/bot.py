@@ -11,7 +11,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from app.config import config
 from app.database.init_db import init_db
-from app.handlers import checkin, habits, start, stats, summary
+from app.handlers import checkin, habits, profile, start, stats, summary
 from app.services.reminder_service import setup_scheduler
 
 
@@ -55,6 +55,7 @@ async def main() -> None:
     dp.include_router(checkin.router)
     dp.include_router(stats.router)
     dp.include_router(summary.router)
+    dp.include_router(profile.router)
     logger.info("Semua router terdaftar.")
 
     logger.info("Menyiapkan scheduler...")

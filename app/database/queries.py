@@ -551,3 +551,63 @@ def _row_to_checkin(row: aiosqlite.Row) -> CheckIn:
         status=row["status"],
         checked_at=row["checked_at"],
     )
+
+# ===========================================================================
+# SECTION 6 — PROFILE QUERIES
+# ===========================================================================
+
+async def get_total_checkins(user_id: int) -> int:
+    """
+    Hitung total semua check-in user sepanjang masa.
+    """
+    async with get_db_connection() as db:
+        async with db.execute(
+            """
+            SELECT COUNT(*) AS total
+            FROM checkins
+            WHERE user_id = ? AND status = 'done'
+            """,
+            (user_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row["total"] if row else 0
+
+
+async def get_total_active_days(user_id: int) -> int:
+    """
+    Hitung berapa hari unik user pernah check-in.
+    Contoh: user check-in di 12 hari berbeda → return 12.
+    """
+    async with get_db_connection() as db:
+        async with db.execute(
+            """
+            SELECT COUNT(DISTINCT date) AS total
+            FROM checkins
+            WHERE user_id = ? AND status = 'done'
+            """,
+            (user_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row["total"] if row else 0
+
+
+async def get_best_streak_ever(user_id: int):
+    """
+    Ambil habit dengan longest_streak tertinggi.
+    Return tuple (nama_habit, longest_streak) atau None.
+    """
+    async with get_db_connection() as db:
+        async with db.execute(
+            """
+            SELECT name, longest_streak
+            FROM habits
+            WHERE user_id = ? AND longest_streak > 0
+            ORDER BY longest_streak DESC
+            LIMIT 1
+            """,
+            (user_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return (row["name"], row["longest_streak"])
