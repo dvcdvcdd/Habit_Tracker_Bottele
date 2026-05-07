@@ -1,2 +1,3 @@
 2026-05-07 16:22:34 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-05-07 16:32:47 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 16:45:26 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected

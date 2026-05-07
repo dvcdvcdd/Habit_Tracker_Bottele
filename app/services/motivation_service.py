@@ -1,14 +1,6 @@
-# app/services/motivation_service.py
-
 import random
-from datetime import datetime
-
 from app.utils.enums import StreakStatus
 
-
-# ---------------------------------------------------------------------------
-# Pesan per konteks
-# ---------------------------------------------------------------------------
 
 _MESSAGES_CHECKIN = [
     "Bagus. Satu langkah kecil tetap berarti.",
@@ -20,18 +12,6 @@ _MESSAGES_CHECKIN = [
     "Good. Jangan berhenti di sini.",
 ]
 
-_MESSAGES_CHECKIN_MORNING = [
-    "Pagi yang produktif! Kamu sudah mulai lebih awal.",
-    "Check-in pagi. Hari ini sudah dimulai dengan baik.",
-    "Bagus, memulai hari dengan disiplin.",
-]
-
-_MESSAGES_CHECKIN_EVENING = [
-    "Hampir selesai hari ini. Kerja bagus.",
-    "Check-in malam. Kamu tidak lupa.",
-    "Hari ini ditutup dengan baik.",
-]
-
 _MESSAGES_STREAK_ACTIVE = [
     "Streak kamu masih hidup. Pertahankan.",
     "Ritme kamu sedang bagus. Jaga terus.",
@@ -41,16 +21,13 @@ _MESSAGES_STREAK_ACTIVE = [
 ]
 
 _MESSAGES_STREAK_MILESTONE = {
-    3:   "3 hari berturut-turut. Awal yang baik!",
-    7:   "7 hari. Satu minggu penuh! 🎉",
+    7:   "7 hari. Satu minggu penuh. Ini sudah lebih dari rata-rata orang.",
     14:  "2 minggu. Habit ini mulai jadi bagian dari dirimu.",
-    21:  "21 hari. Titik awal kebiasaan terbentuk.",
-    30:  "30 hari. Satu bulan penuh. Ini serius. 🏆",
+    21:  "21 hari. Penelitian bilang ini titik awal kebiasaan terbentuk.",
+    30:  "30 hari. Satu bulan penuh. Ini serius.",
     60:  "60 hari. Kamu bukan lagi pemula di habit ini.",
     90:  "90 hari. Tiga bulan. Luar biasa.",
-    100: "100 hari. Tidak banyak orang sampai di sini. 🌟",
-    180: "180 hari. Setengah tahun konsistensi. Respect.",
-    365: "365 hari. Satu tahun penuh. Legendaris. 🏆🏆🏆",
+    100: "100 hari. Tidak banyak orang sampai di sini.",
 }
 
 _MESSAGES_STREAK_BROKEN = [
@@ -97,37 +74,9 @@ _MESSAGES_SUMMARY_EMPTY = [
     "Tidak ada yang terlambat selama hari ini belum berakhir.",
 ]
 
-_MESSAGES_WEEKLY_PERFECT = [
-    "Minggu yang sempurna! Semua habit terceklis setiap hari.",
-    "100% minggu ini. Luar biasa, pertahankan minggu depan.",
-]
-
-_MESSAGES_WEEKLY_GREAT = [
-    "Minggu yang solid! Kamu hampir sempurna.",
-    "Konsistensi kamu minggu ini luar biasa. Lanjutkan.",
-]
-
-_MESSAGES_WEEKLY_OK = [
-    "Lumayan minggu ini. Minggu depan bisa lebih baik.",
-    "Ada progress, ada yang terlewat. Itu normal.",
-]
-
-_MESSAGES_WEEKLY_LOW = [
-    "Minggu ini berat. Tidak apa-apa. Yang penting jangan berhenti.",
-    "Minggu ini belum ideal, tapi setiap check-in tetap berarti.",
-]
-
 
 def get_checkin_message() -> str:
-    """Pesan setelah check-in, sesuai waktu hari."""
-    hour = datetime.now().hour
-
-    if 5 <= hour < 11:
-        return random.choice(_MESSAGES_CHECKIN_MORNING + _MESSAGES_CHECKIN)
-    elif 18 <= hour < 24:
-        return random.choice(_MESSAGES_CHECKIN_EVENING + _MESSAGES_CHECKIN)
-    else:
-        return random.choice(_MESSAGES_CHECKIN)
+    return random.choice(_MESSAGES_CHECKIN)
 
 
 def get_streak_message(streak_status: str, streak_count: int = 0) -> str:
@@ -146,11 +95,6 @@ def get_streak_message(streak_status: str, streak_count: int = 0) -> str:
 
 
 def get_comeback_message(days_absent: int) -> str:
-    if days_absent >= 14:
-        return (
-            f"Sudah {days_absent} hari sejak check-in terakhir. "
-            "Tapi kamu kembali, dan itu yang paling penting."
-        )
     if days_absent >= 7:
         return (
             f"Sudah {days_absent} hari sejak check-in terakhir. "
@@ -176,14 +120,3 @@ def get_summary_message(done: int, total: int) -> str:
 
 def get_milestone_message(streak: int) -> str | None:
     return _MESSAGES_STREAK_MILESTONE.get(streak)
-
-
-def get_weekly_report_message(completion_rate: float) -> str:
-    pct = int(completion_rate * 100)
-    if pct == 100:
-        return random.choice(_MESSAGES_WEEKLY_PERFECT)
-    if pct >= 80:
-        return random.choice(_MESSAGES_WEEKLY_GREAT)
-    if pct >= 50:
-        return random.choice(_MESSAGES_WEEKLY_OK)
-    return random.choice(_MESSAGES_WEEKLY_LOW)

@@ -576,38 +576,3 @@ def _row_to_checkin(row: aiosqlite.Row) -> CheckIn:
         status=row["status"],
         checked_at=row["checked_at"],
     )
-
-# ===========================================================================
-# SECTION 8 — HISTORY QUERIES
-# ===========================================================================
-
-async def get_checkin_history_30days(habit_id: int) -> dict:
-    """
-    Ambil data check-in 30 hari terakhir untuk satu habit.
-    Return dict {date_str: True/False}
-    True = ada check-in, False = tidak ada.
-    """
-    from datetime import date, timedelta
-
-    end = date.fromisoformat(today_str())
-    start = end - timedelta(days=29)
-
-    async with get_db_connection() as db:
-        async with db.execute(
-            """
-            SELECT date FROM checkins
-            WHERE habit_id = ? AND date BETWEEN ? AND ? AND status = 'done'
-            ORDER BY date ASC
-            """,
-            (habit_id, start.isoformat(), end.isoformat()),
-        ) as cursor:
-            rows = await cursor.fetchall()
-            checkin_dates = {row["date"] for row in rows}
-
-    result = {}
-    current = start
-    while current <= end:
-        result[current.isoformat()] = current.isoformat() in checkin_dates
-        current += timedelta(days=1)
-
-    return result

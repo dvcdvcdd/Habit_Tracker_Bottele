@@ -11,6 +11,7 @@ from app.utils.helpers import chunk_list, truncate
 # SECTION 1 — CALLBACK DATA CONSTANTS
 # ===========================================================================
 
+# Menu utama
 CB_MENU_MAIN        = "menu:main"
 CB_MENU_CHECKIN     = "menu:checkin"
 CB_MENU_HABITS      = "menu:habits"
@@ -18,30 +19,33 @@ CB_MENU_STATS       = "menu:stats"
 CB_MENU_SUMMARY     = "menu:summary"
 CB_MENU_PROFILE     = "menu:profile"
 
+# Habit actions
 CB_HABIT_ADD        = "habit:add"
 CB_HABIT_LIST       = "habit:list"
 CB_HABIT_DELETE     = "habit:delete"
 
+# Prefix untuk callback yang butuh ID
 CB_PREFIX_CHECKIN         = "checkin"
 CB_PREFIX_DELETE          = "delete"
 CB_PREFIX_DELETE_CONFIRM  = "delete_confirm"
 CB_PREFIX_DELETE_CANCEL   = "delete_cancel"
 
+# Habit detail & edit
 CB_PREFIX_HABIT_DETAIL   = "habit_detail"
 CB_PREFIX_EDIT_NAME      = "edit_name"
 CB_PREFIX_EDIT_SCHEDULE  = "edit_schedule"
 CB_PREFIX_PAUSE          = "pause"
 CB_PREFIX_RESUME         = "resume"
-CB_PREFIX_HISTORY        = "history"
 
+# Schedule picker
 CB_PREFIX_SCHEDULE  = "schedule"
 
+# Navigasi
 CB_BACK_MAIN        = "nav:main"
 CB_CLOSE            = "nav:close"
 
+# Reminder setting
 CB_REMINDER_SET     = "reminder:set"
-
-CB_ONBOARDING_SKIP  = "onboarding:skip"
 
 
 # ===========================================================================
@@ -90,28 +94,8 @@ def kb_main_menu() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def kb_onboarding() -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-
-    builder.row(
-        InlineKeyboardButton(
-            text="➕ Tambah Habit Pertama",
-            callback_data=CB_HABIT_ADD,
-        )
-    )
-
-    builder.row(
-        InlineKeyboardButton(
-            text="⏭ Lewati, Langsung ke Menu",
-            callback_data=CB_ONBOARDING_SKIP,
-        )
-    )
-
-    return builder.as_markup()
-
-
 # ===========================================================================
-# SECTION 3 — CHECK-IN
+# SECTION 3 — CHECK-IN KEYBOARD
 # ===========================================================================
 
 def kb_checkin_habits(habits: list) -> InlineKeyboardMarkup:
@@ -156,7 +140,7 @@ def kb_checkin_done() -> InlineKeyboardMarkup:
 
 
 # ===========================================================================
-# SECTION 4 — HABIT MANAGEMENT
+# SECTION 4 — HABIT LIST & MANAGEMENT
 # ===========================================================================
 
 def kb_habit_list_menu() -> InlineKeyboardMarkup:
@@ -253,13 +237,6 @@ def kb_habit_picker(habits: list, callback_prefix: str) -> InlineKeyboardMarkup:
 
 def kb_habit_detail(habit_id: int, is_paused: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-
-    builder.row(
-        InlineKeyboardButton(
-            text="📅 Riwayat 30 Hari",
-            callback_data=f"{CB_PREFIX_HISTORY}:{habit_id}",
-        )
-    )
 
     builder.row(
         InlineKeyboardButton(
@@ -451,23 +428,6 @@ def kb_after_checkin(all_done: bool) -> InlineKeyboardMarkup:
             text="🏠 Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
-    )
-
-    return builder.as_markup()
-
-
-def kb_history_back(habit_id: int) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-
-    builder.row(
-        InlineKeyboardButton(
-            text="🔙 Kembali ke Detail",
-            callback_data=f"{CB_PREFIX_HABIT_DETAIL}:{habit_id}",
-        ),
-        InlineKeyboardButton(
-            text="🏠 Menu Utama",
-            callback_data=CB_BACK_MAIN,
-        ),
     )
 
     return builder.as_markup()
