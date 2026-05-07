@@ -1,8 +1,10 @@
 # app/database/init_db.py
 
-import aiosqlite
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
+
+import aiosqlite
 
 from app.config import config
 
@@ -10,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# SQL untuk membuat semua tabel
-# Dipisah ke konstanta agar mudah dibaca dan diubah
+# SQL schema
 # ---------------------------------------------------------------------------
 
 SQL_CREATE_USERS = """
@@ -51,97 +52,71 @@ CREATE TABLE IF NOT EXISTS checkins (
     status      TEXT    NOT NULL DEFAULT 'done',
     checked_at  TEXT    NOT NULL,
     FOREIGN KEY (habit_id) REFERENCES habits(habit_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)  REFERENCES users(user_id)   ON DELETE CASCADE,
+    FOREIGN KEY (user_id)  REFERENCES users(user_id) ON DELETE CASCADE,
     UNIQUE (habit_id, date)
 );
 """
 
 SQL_CREATE_INDEXES = [
-    # Mempercepat query checkin berdasarkan user dan tanggal
     "CREATE INDEX IF NOT EXISTS idx_checkins_user_date ON checkins(user_id, date);",
-    # Mempercepat query habit aktif milik user tertentu
     "CREATE INDEX IF NOT EXISTS idx_habits_user_active ON habits(user_id, is_active);",
-    # Mempercepat query reminder berdasarkan waktu
     "CREATE INDEX IF NOT EXISTS idx_users_reminder ON users(reminder_time, is_active);",
 ]
 
 SQL_ENABLE_WAL = "PRAGMA journal_mode=WAL;"
-SQL_ENABLE_FK  = "PRAGMA foreign_keys=ON;"
+SQL_ENABLE_FK = "PRAGMA foreign_keys=ON;"
 
 
 async def init_db() -> None:
     """
-    Menginisialisasi database SQLite.
-
-    Yang dilakukan:
-    1. Buat folder data/ jika belum ada
-    2. Aktifkan WAL mode (lebih cepat dan aman untuk concurrent access)
-    3. Aktifkan foreign key constraint
-    4. Buat semua tabel jika belum ada
-    5. Buat index untuk performa query
-
-    Fungsi ini dipanggil sekali saat bot pertama kali start.
+    Inisialisasi database:
+    - pastikan folder data ada
+    - aktifkan WAL
+    - aktifkan foreign keys
+    - buat tabel jika belum ada
+    - buat index
     """
-    # Pastikan folder data/ ada
     db_path = Path(config.db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"Menginisialisasi database di: {db_path}")
 
     async with aiosqlite.connect(db_path) as db:
-
-        # Aktifkan WAL mode
-        # WAL = Write-Ahead Logging
-        # Membuat read dan write bisa terjadi bersamaan tanpa lock
         await db.execute(SQL_ENABLE_WAL)
-
-        # Aktifkan foreign key constraint
-        # SQLite tidak aktifkan ini secara default
         await db.execute(SQL_ENABLE_FK)
 
-        # Buat tabel users
         await db.execute(SQL_CREATE_USERS)
         logger.info("Tabel 'users' siap.")
 
-        # Buat tabel habits
         await db.execute(SQL_CREATE_HABITS)
         logger.info("Tabel 'habits' siap.")
 
-        # Buat tabel checkins
         await db.execute(SQL_CREATE_CHECKINS)
         logger.info("Tabel 'checkins' siap.")
 
-        # Buat semua index
         for sql_index in SQL_CREATE_INDEXES:
             await db.execute(sql_index)
-        logger.info("Index database siap.")
 
-        # Simpan semua perubahan
+        logger.info("Index database siap.")
         await db.commit()
 
     logger.info("Database berhasil diinisialisasi.")
 
 
-async def get_db_connection() -> aiosqlite.Connection:
+@asynccontextmanager
+async def get_db_connection():
     """
-    Membuka dan mengembalikan koneksi database.
-
-    Penting:
-    - Selalu aktifkan foreign keys setiap kali buka koneksi baru
-    - Aktifkan row_factory agar hasil query bisa diakses seperti dict
+    Koneksi database per pemakaian.
 
     Cara pakai:
-        async with await get_db_connection() as db:
+        async with get_db_connection() as db:
             await db.execute(...)
 
-    Catatan:
-    Untuk project yang lebih besar, sebaiknya pakai connection pool.
-    Untuk versi 1.0 ini, pendekatan per-query sudah cukup.
+    Penting:
+    - jangan pakai: async with await get_db_connection()
+    - pakai:        async with get_db_connection()
     """
-    db = await aiosqlite.connect(config.db_path)
-    db.row_factory = aiosqlite.Row
-
-    # Aktifkan foreign keys
-    await db.execute(SQL_ENABLE_FK)
-
-    return db
+    async with aiosqlite.connect(config.db_path) as db:
+        db.row_factory = aiosqlite.Row
+        await db.execute(SQL_ENABLE_FK)
+        yield db

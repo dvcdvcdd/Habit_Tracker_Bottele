@@ -1,16 +1,8 @@
-# app/config.py
-
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-
-# ---------------------------------------------------------------------------
-# Load file .env
-# Kita cari file .env dari root folder project (dua level di atas file ini)
-# ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -62,11 +54,5 @@ def load_config() -> Config:
         reminder_time      = os.getenv("REMINDER_TIME", "19:00"),
         comeback_threshold = int(os.getenv("COMEBACK_THRESHOLD", "2")),
     )
-
-
-# ---------------------------------------------------------------------------
-# Instance config yang siap dipakai di seluruh project
-# Import dari sini: from app.config import config
-# ---------------------------------------------------------------------------
 
 config = load_config()
