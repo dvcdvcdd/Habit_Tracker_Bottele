@@ -104,12 +104,10 @@ async def handle_habit_name_input(
 ) -> None:
     """
     Langkah 2: User mengetik nama habit.
-
-    Dua kemungkinan:
-    a) User menekan 'Batal' → keluar dari proses
-    b) User mengetik nama → validasi → tampilkan pilihan jadwal
     """
-    user_input = message.text.strip()
+    from app.utils.helpers import sanitize_text, is_valid_habit_name, escape_markdown
+
+    user_input = message.text.strip() if message.text else ""
 
     # Cek apakah user menekan Batal
     if user_input == "❌ Batal":
@@ -125,23 +123,24 @@ async def handle_habit_name_input(
         )
         return
 
-    # Validasi panjang nama di sini dulu (validasi lengkap ada di service)
-    if len(user_input) > 50:
+    # Sanitasi dan validasi input
+    clean_name           = sanitize_text(user_input)
+    is_valid, error_msg  = is_valid_habit_name(clean_name)
+
+    if not is_valid:
         await message.answer(
-            text         = (
-                "⚠️ Nama habit terlalu panjang.\n"
-                "Maksimal 50 karakter. Coba lagi:"
-            ),
+            text         = f"⚠️ {error_msg}\n\nCoba lagi:",
             reply_markup = kb_cancel(),
         )
         return  # Tetap di state waiting_name
 
-    # Simpan nama ke FSM storage
-    await state.update_data(habit_name=user_input)
+    # Simpan nama yang sudah disanitasi ke FSM storage
+    await state.update_data(habit_name=clean_name)
 
-    # Hapus reply keyboard
+    # Tampilkan konfirmasi nama
+    safe_name = escape_markdown(clean_name)
     await message.answer(
-        text         = f'Nama habit: *"{user_input}"*',
+        text         = f'Nama habit: *"{safe_name}"*',
         parse_mode   = "Markdown",
         reply_markup = kb_remove(),
     )
@@ -156,7 +155,6 @@ async def handle_habit_name_input(
         reply_markup = kb_schedule_picker(),
     )
 
-    # Pindah ke state berikutnya
     await state.set_state(AddHabitStates.waiting_schedule)
 
 
