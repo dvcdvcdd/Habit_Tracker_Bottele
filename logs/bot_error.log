@@ -1,3 +1,11 @@
 2026-05-07 16:22:34 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-05-07 16:32:47 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
 2026-05-07 16:45:26 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 16:49:24 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramRetryAfter: Telegram server says - Flood control exceeded on method 'GetUpdates'. Retry in 5 seconds.
+Original description: Too Many Requests: retry after 5
+(background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)
+2026-05-07 16:49:25 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramRetryAfter: Telegram server says - Flood control exceeded on method 'GetUpdates'. Retry in 5 seconds.
+Original description: Too Many Requests: retry after 5
+(background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)
+2026-05-07 16:49:31 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-05-07 16:52:20 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
