@@ -210,3 +210,156 @@ Original description: Too Many Requests: retry after 5
 2026-05-07 16:52:20 | INFO     | __main__ — Bot berhenti dengan bersih.
 2026-05-07 16:52:20 | INFO     | __main__ — ==================================================
 2026-05-07 16:52:20 | INFO     | apscheduler.scheduler — Scheduler has been shut down
+2026-05-07 16:52:27 | INFO     | __main__ — ==================================================
+2026-05-07 16:52:27 | INFO     | __main__ — Habit Tracker Bot sedang starting up...
+2026-05-07 16:52:27 | INFO     | __main__ — Log tersimpan di folder: logs/
+2026-05-07 16:52:27 | INFO     | __main__ — ==================================================
+2026-05-07 16:52:27 | INFO     | __main__ — Menginisialisasi database...
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Menginisialisasi database di: data\habits.db
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Tabel 'users' siap.
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Tabel 'habits' siap.
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Tabel 'checkins' siap.
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Index database siap.
+2026-05-07 16:52:27 | INFO     | app.database.init_db — Database berhasil diinisialisasi.
+2026-05-07 16:52:27 | INFO     | __main__ — Database siap.
+2026-05-07 16:52:28 | INFO     | __main__ — Mendaftarkan middleware...
+2026-05-07 16:52:28 | INFO     | __main__ — Middleware terdaftar.
+2026-05-07 16:52:28 | INFO     | __main__ — Mendaftarkan router handler...
+2026-05-07 16:52:28 | INFO     | __main__ — Semua router terdaftar.
+2026-05-07 16:52:28 | INFO     | __main__ — Menyiapkan scheduler...
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 16:52:28 | INFO     | app.services.reminder_service — Scheduler dikonfigurasi:
+  - Morning reset  : 00:05
+  - Daily reminder : 19:00
+  - Daily summary  : 21:00
+  - Weekly report  : Minggu 20:00
+  - Timezone       : Asia/Jakarta
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Added job "send_morning_reset" to job store "default"
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Added job "send_daily_reminder" to job store "default"
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Added job "send_daily_summary_broadcast" to job store "default"
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Added job "send_weekly_report" to job store "default"
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Added job "main.<locals>.<lambda>" to job store "default"
+2026-05-07 16:52:28 | INFO     | apscheduler.scheduler — Scheduler started
+2026-05-07 16:52:28 | INFO     | __main__ — Scheduler berjalan.
+2026-05-07 16:52:28 | INFO     | __main__ — Bot mulai polling...
+2026-05-07 16:52:28 | INFO     | __main__ — Bot siap menerima pesan. Tekan Ctrl+C untuk berhenti.
+2026-05-07 16:52:28 | INFO     | __main__ — ==================================================
+2026-05-07 16:57:28 | INFO     | apscheduler.executors.default — Running job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:02:28 PDT)" (scheduled at 2026-05-07 16:57:28.254008-07:00)
+2026-05-07 16:57:28 | INFO     | apscheduler.executors.default — Job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:02:28 PDT)" executed successfully
+2026-05-07 17:02:28 | INFO     | apscheduler.executors.default — Running job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:07:28 PDT)" (scheduled at 2026-05-07 17:02:28.254008-07:00)
+2026-05-07 17:02:28 | INFO     | apscheduler.executors.default — Job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:07:28 PDT)" executed successfully
+2026-05-07 17:05:16 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:05:16 | WARNING  | aiogram.dispatcher — Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8315641064)
+2026-05-07 17:05:16 | INFO     | __main__ — Memulai graceful shutdown...
+2026-05-07 17:05:16 | INFO     | __main__ — Mematikan scheduler...
+2026-05-07 17:05:16 | INFO     | __main__ — Scheduler berhenti.
+2026-05-07 17:05:16 | INFO     | __main__ — Menutup koneksi bot...
+2026-05-07 17:05:16 | INFO     | __main__ — Koneksi bot ditutup.
+2026-05-07 17:05:16 | INFO     | __main__ — Bot berhenti dengan bersih.
+2026-05-07 17:05:16 | INFO     | __main__ — ==================================================
+2026-05-07 17:05:16 | INFO     | apscheduler.scheduler — Scheduler has been shut down
+2026-05-07 17:05:25 | INFO     | __main__ — ==================================================
+2026-05-07 17:05:25 | INFO     | __main__ — Habit Tracker Bot sedang starting up...
+2026-05-07 17:05:25 | INFO     | __main__ — Log tersimpan di folder: logs/
+2026-05-07 17:05:25 | INFO     | __main__ — ==================================================
+2026-05-07 17:05:25 | INFO     | __main__ — Menginisialisasi database...
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Menginisialisasi database di: data\habits.db
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Tabel 'users' siap.
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Tabel 'habits' siap.
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Tabel 'checkins' siap.
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Index database siap.
+2026-05-07 17:05:25 | INFO     | app.database.init_db — Database berhasil diinisialisasi.
+2026-05-07 17:05:25 | INFO     | __main__ — Database siap.
+2026-05-07 17:05:26 | INFO     | __main__ — Mendaftarkan middleware...
+2026-05-07 17:05:26 | INFO     | __main__ — Middleware terdaftar.
+2026-05-07 17:05:26 | INFO     | __main__ — Mendaftarkan router handler...
+2026-05-07 17:05:26 | INFO     | __main__ — Semua router terdaftar.
+2026-05-07 17:05:26 | INFO     | __main__ — Menyiapkan scheduler...
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:05:26 | INFO     | app.services.reminder_service — Scheduler dikonfigurasi:
+  - Morning reset  : 00:05
+  - Daily reminder : 19:00
+  - Daily summary  : 21:00
+  - Weekly report  : Minggu 20:00
+  - Timezone       : Asia/Jakarta
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Added job "send_morning_reset" to job store "default"
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Added job "send_daily_reminder" to job store "default"
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Added job "send_daily_summary_broadcast" to job store "default"
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Added job "send_weekly_report" to job store "default"
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Added job "main.<locals>.<lambda>" to job store "default"
+2026-05-07 17:05:26 | INFO     | apscheduler.scheduler — Scheduler started
+2026-05-07 17:05:26 | INFO     | __main__ — Scheduler berjalan.
+2026-05-07 17:05:26 | INFO     | __main__ — Bot mulai polling...
+2026-05-07 17:05:26 | INFO     | __main__ — Bot siap menerima pesan. Tekan Ctrl+C untuk berhenti.
+2026-05-07 17:05:26 | INFO     | __main__ — ==================================================
+2026-05-07 17:05:34 | INFO     | app.handlers.start — User /start: 6005721006 (@zakxyz1945)
+2026-05-07 17:08:38 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:08:38 | WARNING  | aiogram.dispatcher — Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8315641064)
+2026-05-07 17:08:38 | INFO     | __main__ — Memulai graceful shutdown...
+2026-05-07 17:08:38 | INFO     | __main__ — Mematikan scheduler...
+2026-05-07 17:08:38 | INFO     | __main__ — Scheduler berhenti.
+2026-05-07 17:08:38 | INFO     | __main__ — Menutup koneksi bot...
+2026-05-07 17:08:38 | INFO     | __main__ — Koneksi bot ditutup.
+2026-05-07 17:08:38 | INFO     | __main__ — Bot berhenti dengan bersih.
+2026-05-07 17:08:38 | INFO     | __main__ — ==================================================
+2026-05-07 17:08:38 | INFO     | apscheduler.scheduler — Scheduler has been shut down
+2026-05-07 17:08:50 | INFO     | __main__ — ==================================================
+2026-05-07 17:08:50 | INFO     | __main__ — Habit Tracker Bot sedang starting up...
+2026-05-07 17:08:50 | INFO     | __main__ — Log tersimpan di folder: logs/
+2026-05-07 17:08:50 | INFO     | __main__ — ==================================================
+2026-05-07 17:08:50 | INFO     | __main__ — Menginisialisasi database...
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Menginisialisasi database di: data\habits.db
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Tabel 'users' siap.
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Tabel 'habits' siap.
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Tabel 'checkins' siap.
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Index database siap.
+2026-05-07 17:08:50 | INFO     | app.database.init_db — Database berhasil diinisialisasi.
+2026-05-07 17:08:50 | INFO     | __main__ — Database siap.
+2026-05-07 17:08:50 | INFO     | __main__ — Mendaftarkan middleware...
+2026-05-07 17:08:50 | INFO     | __main__ — Middleware terdaftar.
+2026-05-07 17:08:50 | INFO     | __main__ — Mendaftarkan router handler...
+2026-05-07 17:08:50 | INFO     | __main__ — Semua router terdaftar.
+2026-05-07 17:08:50 | INFO     | __main__ — Menyiapkan scheduler...
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:08:50 | INFO     | app.services.reminder_service — Scheduler dikonfigurasi:
+  - Morning reset  : 00:05
+  - Daily reminder : 19:00
+  - Daily summary  : 21:00
+  - Weekly report  : Minggu 20:00
+  - Timezone       : Asia/Jakarta
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Added job "send_morning_reset" to job store "default"
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Added job "send_daily_reminder" to job store "default"
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Added job "send_daily_summary_broadcast" to job store "default"
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Added job "send_weekly_report" to job store "default"
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Added job "main.<locals>.<lambda>" to job store "default"
+2026-05-07 17:08:50 | INFO     | apscheduler.scheduler — Scheduler started
+2026-05-07 17:08:50 | INFO     | __main__ — Scheduler berjalan.
+2026-05-07 17:08:50 | INFO     | __main__ — Bot mulai polling...
+2026-05-07 17:08:50 | INFO     | __main__ — Bot siap menerima pesan. Tekan Ctrl+C untuk berhenti.
+2026-05-07 17:08:50 | INFO     | __main__ — ==================================================
+2026-05-07 17:08:58 | INFO     | app.handlers.start — User /start: 6005721006 (@zakxyz1945)
+2026-05-07 17:12:50 | INFO     | app.handlers.start — User /start: 6005721006 (@zakxyz1945)
+2026-05-07 17:13:50 | INFO     | apscheduler.executors.default — Running job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:18:50 PDT)" (scheduled at 2026-05-07 17:13:50.465906-07:00)
+2026-05-07 17:13:50 | INFO     | apscheduler.executors.default — Job "main.<locals>.<lambda> (trigger: interval[0:05:00], next run at: 2026-05-07 17:18:50 PDT)" executed successfully
+2026-05-07 17:13:58 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:13:58 | WARNING  | aiogram.dispatcher — Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8315641064)
+2026-05-07 17:13:59 | INFO     | __main__ — Memulai graceful shutdown...
+2026-05-07 17:13:59 | INFO     | __main__ — Mematikan scheduler...
+2026-05-07 17:13:59 | INFO     | __main__ — Scheduler berhenti.
+2026-05-07 17:13:59 | INFO     | __main__ — Menutup koneksi bot...
+2026-05-07 17:13:59 | INFO     | __main__ — Koneksi bot ditutup.
+2026-05-07 17:13:59 | INFO     | __main__ — Bot berhenti dengan bersih.
+2026-05-07 17:13:59 | INFO     | __main__ — ==================================================
+2026-05-07 17:13:59 | INFO     | apscheduler.scheduler — Scheduler has been shut down

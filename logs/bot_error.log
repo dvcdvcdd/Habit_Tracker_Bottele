@@ -9,3 +9,6 @@ Original description: Too Many Requests: retry after 5
 (background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)
 2026-05-07 16:49:31 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
 2026-05-07 16:52:20 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:05:16 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:08:38 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-05-07 17:13:58 | ERROR    | aiogram.dispatcher — Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected

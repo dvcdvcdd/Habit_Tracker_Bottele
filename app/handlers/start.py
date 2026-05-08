@@ -26,7 +26,6 @@ router = Router()
 def _build_welcome_text(first_name: str) -> str:
     day = weekday_name_today()
     date = format_date_display(today_str())
-
     return (
         f"Hei, *{first_name}!* 👋\n\n"
         f"Selamat datang di *Habit Tracker Bot*.\n\n"
@@ -49,10 +48,10 @@ def _build_onboarding_text(first_name: str) -> str:
         f"2️⃣ *Check-in setiap hari* saat kamu menyelesaikan habit\n"
         f"   Cukup tekan tombol, tidak perlu ketik apa-apa\n\n"
         f"3️⃣ *Pantau streak* dan statistik kamu\n"
-        f"   Bot akan menghitung berapa hari berturut-turut kamu konsisten\n\n"
+        f"   Bot akan menghitung konsistensi kamu\n\n"
         f"4️⃣ *Terima reminder* setiap hari\n"
         f"   Supaya kamu tidak lupa check-in\n\n"
-        f"💡 _Tips: mulai dengan 2-3 habit saja, jangan langsung banyak._\n\n"
+        f"💡 _Tips: mulai dengan 2-3 habit saja._\n\n"
         f"Yuk mulai dengan menambahkan habit pertamamu!"
     )
 
@@ -77,19 +76,15 @@ async def handle_start(message: Message) -> None:
 
     logger.info(f"User /start: {user.id} (@{user.username})")
 
-    # Cek apakah user baru (belum punya habit)
     habits = await get_habits(user.id, active_only=True)
     is_new_user = len(habits) == 0
 
     if is_new_user:
-        # Cek apakah benar-benar baru atau pernah pakai tapi hapus semua
         existing_user = await get_user(user.id)
         if existing_user and existing_user.last_active == today_str():
-            # Bukan user baru, hanya belum punya habit aktif
             is_new_user = False
 
     if is_new_user:
-        # Tampilkan onboarding untuk user baru
         await message.answer(
             text=_build_onboarding_text(user.first_name),
             parse_mode="Markdown",
@@ -97,7 +92,6 @@ async def handle_start(message: Message) -> None:
         )
         return
 
-    # User lama — cek comeback mode
     comeback_text = await get_comeback_text(user.id)
 
     if comeback_text:
@@ -115,10 +109,8 @@ async def handle_start(message: Message) -> None:
 
 @router.callback_query(lambda c: c.data == CB_ONBOARDING_SKIP)
 async def handle_onboarding_skip(callback: CallbackQuery) -> None:
-    user = callback.from_user
-
     await callback.message.edit_text(
-        text=_build_menu_text(user.first_name),
+        text=_build_menu_text(callback.from_user.first_name),
         parse_mode="Markdown",
         reply_markup=kb_main_menu(),
     )
@@ -127,10 +119,8 @@ async def handle_onboarding_skip(callback: CallbackQuery) -> None:
 
 @router.message(Command("menu"))
 async def handle_menu_command(message: Message) -> None:
-    user = message.from_user
-
     await message.answer(
-        text=_build_menu_text(user.first_name),
+        text=_build_menu_text(message.from_user.first_name),
         parse_mode="Markdown",
         reply_markup=kb_main_menu(),
     )
@@ -168,10 +158,8 @@ async def handle_help(message: Message) -> None:
 
 @router.callback_query(lambda c: c.data == CB_BACK_MAIN)
 async def handle_back_to_main(callback: CallbackQuery) -> None:
-    user = callback.from_user
-
     await callback.message.edit_text(
-        text=_build_menu_text(user.first_name),
+        text=_build_menu_text(callback.from_user.first_name),
         parse_mode="Markdown",
         reply_markup=kb_main_menu(),
     )
