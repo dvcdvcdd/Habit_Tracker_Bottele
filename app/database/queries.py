@@ -63,6 +63,8 @@ async def get_user(user_id: int) -> Optional[User]:
                 is_active=bool(row["is_active"]),
                 created_at=row["created_at"],
                 last_active=row["last_active"],
+                points=row["points"],
+                level=row["level"],
             )
 
 
@@ -84,6 +86,36 @@ async def update_last_active(user_id: int) -> None:
         await db.commit()
 
 
+async def add_user_points(user_id: int, points_to_add: int) -> Tuple[int, int, bool]:
+    """
+    Menambahkan poin ke user, dan menaikkan level jika melewati batas kelipatan 100.
+    Mengembalikan tuple (new_points, new_level, level_up_occurred).
+    """
+    async with get_db_connection() as db:
+        async with db.execute(
+            "SELECT points, level FROM users WHERE user_id = ?",
+            (user_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            if not row:
+                return 0, 1, False
+
+            current_points = row["points"]
+            current_level = row["level"]
+
+        new_points = current_points + points_to_add
+        new_level = (new_points // 100) + 1
+        level_up_occurred = new_level > current_level
+
+        await db.execute(
+            "UPDATE users SET points = ?, level = ? WHERE user_id = ?",
+            (new_points, new_level, user_id),
+        )
+        await db.commit()
+
+        return new_points, new_level, level_up_occurred
+
+
 async def get_all_active_users() -> List[User]:
     async with get_db_connection() as db:
         async with db.execute(
@@ -100,6 +132,8 @@ async def get_all_active_users() -> List[User]:
                     is_active=bool(row["is_active"]),
                     created_at=row["created_at"],
                     last_active=row["last_active"],
+                    points=row["points"],
+                    level=row["level"],
                 )
                 for row in rows
             ]
@@ -122,6 +156,8 @@ async def get_users_by_reminder_time(reminder_time: str) -> List[User]:
                     is_active=bool(row["is_active"]),
                     created_at=row["created_at"],
                     last_active=row["last_active"],
+                    points=row["points"],
+                    level=row["level"],
                 )
                 for row in rows
             ]

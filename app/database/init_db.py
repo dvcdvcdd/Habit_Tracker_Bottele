@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS users (
     timezone        TEXT    NOT NULL DEFAULT 'Asia/Jakarta',
     is_active       INTEGER NOT NULL DEFAULT 1,
     created_at      TEXT    NOT NULL,
-    last_active     TEXT
+    last_active     TEXT,
+    points          INTEGER NOT NULL DEFAULT 0,
+    level           INTEGER NOT NULL DEFAULT 1
 );
 """
 
@@ -98,6 +100,18 @@ async def init_db() -> None:
             await db.execute(sql_index)
 
         logger.info("Index database siap.")
+
+        # ALTER TABLE for existing users schema
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN points INTEGER NOT NULL DEFAULT 0")
+            await db.execute("ALTER TABLE users ADD COLUMN level INTEGER NOT NULL DEFAULT 1")
+            logger.info("Migrasi kolom points dan level berhasil.")
+        except aiosqlite.OperationalError as e:
+            if "duplicate column name" in str(e):
+                logger.info("Kolom points dan level sudah ada.")
+            else:
+                logger.error(f"Gagal melakukan ALTER TABLE users: {e}")
+
         await db.commit()
 
     logger.info("Database berhasil diinisialisasi.")

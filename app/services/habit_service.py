@@ -52,6 +52,8 @@ class CheckInResult:
     streak_status:    str
     motivation_msg:   str
     milestone_msg:    Optional[str]
+    gained_points:    int = 0
+    level_up_msg:     Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +181,7 @@ async def do_checkin(user_id: int, habit_id: int) -> CheckInResult:
     """
     Melakukan check-in untuk satu habit.
     """
-    from app.database.queries import create_checkin
+    from app.database.queries import create_checkin, add_user_points
     from app.services.streak_service import process_checkin_streak
     from app.services.motivation_service import get_checkin_message, get_milestone_message
 
@@ -228,11 +230,19 @@ async def do_checkin(user_id: int, habit_id: int) -> CheckInResult:
     motivation = get_checkin_message()
     milestone  = get_milestone_message(new_streak)
 
+    # Gamification points logic
+    points_to_add = 10
+    if new_streak > 0 and new_streak % 7 == 0:
+        points_to_add += 40
+
+    new_points, new_level, level_up_occurred = await add_user_points(user_id, points_to_add)
+    level_up_msg = f"🎉 Naik Level! Kamu sekarang Level {new_level}!" if level_up_occurred else None
+
     await update_last_active(user_id)
 
     logger.info(
         f"Check-in berhasil: user={user_id}, habit={habit.name}, "
-        f"streak={new_streak}, status={streak_status}"
+        f"streak={new_streak}, status={streak_status}, gained_points={points_to_add}, new_level={new_level}"
     )
 
     return CheckInResult(
@@ -244,6 +254,8 @@ async def do_checkin(user_id: int, habit_id: int) -> CheckInResult:
         streak_status  = streak_status,
         motivation_msg = motivation,
         milestone_msg  = milestone,
+        gained_points  = points_to_add,
+        level_up_msg   = level_up_msg,
     )
 
 

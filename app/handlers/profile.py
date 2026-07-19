@@ -61,6 +61,8 @@ async def _build_profile_text(user_id: int) -> str:
     username = f"@{user.username}" if user.username else "tidak diset"
     joined   = format_date_display(user.created_at)
     reminder = user.reminder_time
+    points   = user.points
+    level    = user.level
     total_h  = len(habits)
 
     # Best streak display
@@ -77,6 +79,10 @@ async def _build_profile_text(user_id: int) -> str:
         f"🆔 Username  : {username}\n"
         f"📅 Bergabung : {joined}\n"
         f"🕐 Reminder  : {reminder} WIB\n"
+        f"\n"
+        f"🎮 *Gamifikasi*\n"
+        f"├ Level Kamu         : *{level}*\n"
+        f"└ Total Poin         : *{points}*\n"
         f"\n"
         f"📊 *Ringkasan*\n"
         f"├ Habit aktif        : *{total_h}*\n"

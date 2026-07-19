@@ -92,9 +92,16 @@ async def handle_do_checkin(callback: CallbackQuery) -> None:
     streak_text  = format_streak(result.new_streak)
     notif_parts  = [f"✅ {result.habit_name}  {streak_text}"]
 
+    if result.gained_points > 0:
+        notif_parts.append(f"🎯 +{result.gained_points} Poin")
+
+    if result.level_up_msg:
+        notif_parts.append(result.level_up_msg)
+
     if result.milestone_msg:
         notif_parts.append(f"🎉 {result.milestone_msg}")
-    else:
+    elif not result.level_up_msg:
+        # Only show generic motivation if they didn't just level up
         notif_parts.append(result.motivation_msg)
 
     await callback.answer(

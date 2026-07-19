@@ -17,6 +17,8 @@ class User:
     is_active:        bool           # Apakah user masih aktif (belum /stop)
     created_at:       str            # Tanggal pertama kali /start, format "YYYY-MM-DD"
     last_active:      Optional[str]  # Tanggal terakhir interaksi
+    points:           int = 0        # Poin gamifikasi
+    level:            int = 1        # Level gamifikasi
 
 
 @dataclass
