@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from app.database.models import Habit
@@ -19,7 +19,14 @@ from app.utils.enums import (
     SCHEDULE_DISPLAY,
     StreakStatus,
 )
-from app.utils.helpers import format_streak
+from app.utils.helpers import (
+    DONE_MARK,
+    TODO_MARK,
+    OFF_MARK,
+    esc,
+    format_streak,
+    progress_bar,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +109,7 @@ async def add_habit(
 
     except Exception as e:
         logger.error(f"Error saat tambah habit: {e}")
-        return False, "Terjadi kesalahan. Coba lagi.", None
+        return False, "Terjadi kesalahan. Silakan coba lagi.", None
 
 
 async def remove_habit(user_id: int, habit_id: int) -> Tuple[bool, str]:
@@ -122,7 +129,7 @@ async def remove_habit(user_id: int, habit_id: int) -> Tuple[bool, str]:
         logger.info(f"Habit dihapus: user={user_id}, habit_id={habit_id}")
         return True, f'Habit "{habit.name}" berhasil dihapus.'
 
-    return False, "Gagal menghapus habit. Coba lagi."
+    return False, "Gagal menghapus habit. Silakan coba lagi."
 
 
 async def get_habits_with_status(user_id: int) -> List[HabitWithStatus]:
@@ -206,7 +213,7 @@ async def do_checkin(user_id: int, habit_id: int) -> CheckInResult:
             new_streak     = habit.current_streak,
             longest_streak = habit.longest_streak,
             streak_status  = StreakStatus.ACTIVE,
-            motivation_msg = "Kamu sudah check-in habit ini hari ini. 👍",
+            motivation_msg = "Kamu sudah check-in habit ini hari ini.",
             milestone_msg  = None,
         )
 
@@ -220,7 +227,7 @@ async def do_checkin(user_id: int, habit_id: int) -> CheckInResult:
             new_streak     = habit.current_streak,
             longest_streak = habit.longest_streak,
             streak_status  = StreakStatus.ACTIVE,
-            motivation_msg = "Kamu sudah check-in habit ini hari ini. 👍",
+            motivation_msg = "Kamu sudah check-in habit ini hari ini.",
             milestone_msg  = None,
         )
 
@@ -256,73 +263,79 @@ def format_schedule_display(schedule: str) -> str:
 
 def build_habit_list_text(habits_with_status: List[HabitWithStatus]) -> str:
     """
-    Membuat teks daftar habit yang siap dikirim ke Telegram.
+    Membuat teks daftar habit yang siap dikirim ke Telegram (HTML).
     """
     if not habits_with_status:
         return (
-            "Kamu belum punya habit.\n\n"
+            "Kamu belum memiliki habit.\n\n"
             "Gunakan tombol di bawah untuk menambahkan habit pertamamu."
         )
 
-    lines = ["📋 *Semua habit kamu*\n"]
+    lines = ["<b>Habit Saya</b>"]
 
     for item in habits_with_status:
         if item.is_scheduled:
-            status_icon = "✅" if item.is_done_today else "⬜"
+            status_icon = DONE_MARK if item.is_done_today else TODO_MARK
         else:
-            status_icon = "💤"
+            status_icon = OFF_MARK
 
         schedule_text = format_schedule_display(item.habit.schedule)
         streak_text   = item.streak_display
+        name          = esc(item.habit.name)
 
         lines.append(
-            f"{status_icon} *{item.habit.name}*\n"
-            f"   📅 {schedule_text}  {streak_text}"
+            f"{status_icon} <b>{name}</b>\n"
+            f"    {schedule_text} — {streak_text}"
         )
 
-    lines.append(
-        "\n✅ selesai  ⬜ belum  💤 tidak dijadwalkan hari ini"
+    legend = (
+        f"{DONE_MARK} selesai   {TODO_MARK} belum   "
+        f"{OFF_MARK} tidak dijadwalkan"
     )
 
-    return "\n\n".join(lines[:-1]) + "\n" + lines[-1]
+    return "\n\n".join(lines) + "\n\n" + legend
 
 
 def build_today_checkin_text(habits_with_status: List[HabitWithStatus]) -> str:
     """
-    Membuat teks untuk tampilan check-in hari ini.
+    Membuat teks untuk tampilan check-in hari ini (HTML).
     """
     from app.utils.dates import weekday_name_today, format_date_display, today_str
-    from app.utils.helpers import emoji_progress_bar
 
     day_name = weekday_name_today()
     date_str = format_date_display(today_str())
 
     if not habits_with_status:
         return (
-            f"📅 *{day_name}, {date_str}*\n\n"
+            f"<b>Check-in Hari Ini</b>\n"
+            f"<i>{day_name}, {date_str}</i>\n\n"
             "Tidak ada habit yang dijadwalkan hari ini.\n"
-            "Istirahat dengan tenang 😌"
+            "Gunakan waktu ini untuk istirahat dan memulihkan tenaga."
         )
 
     total = len(habits_with_status)
     done  = sum(1 for h in habits_with_status if h.is_done_today)
 
-    progress = emoji_progress_bar(done, total)
+    progress = progress_bar(done, total)
 
     lines = [
-        f"📅 *{day_name}, {date_str}*",
-        f"`{progress}`",
+        "<b>Check-in Hari Ini</b>",
+        f"<i>{day_name}, {date_str}</i>",
+        "",
+        f"<code>{progress}</code>  {done}/{total}",
         "",
     ]
 
     for item in habits_with_status:
-        icon = "✅" if item.is_done_today else "⬜"
-        lines.append(f"{icon} {item.habit.name}  {item.streak_display}")
+        icon = DONE_MARK if item.is_done_today else TODO_MARK
+        lines.append(f"{icon} {esc(item.habit.name)}  {item.streak_display}")
 
     if done == total:
-        lines.append("\n🎉 Semua selesai hari ini!")
+        lines.append("")
+        lines.append("Semua habit selesai hari ini. Kerja bagus.")
     else:
         remaining = total - done
-        lines.append(f"\n{remaining} habit lagi menunggu check-in.")
+        lines.append("")
+        lines.append(f"{remaining} habit menunggu check-in.")
 
     return "\n".join(lines)

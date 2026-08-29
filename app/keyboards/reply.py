@@ -17,7 +17,7 @@ def kb_cancel() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
 
     builder.row(
-        KeyboardButton(text="❌ Batal")
+        KeyboardButton(text="Batal")
     )
 
     return builder.as_markup(

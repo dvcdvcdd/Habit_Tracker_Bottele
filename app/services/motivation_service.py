@@ -14,14 +14,14 @@ _MESSAGES_CHECKIN = [
     "Bagus. Satu langkah kecil tetap berarti.",
     "Done. Konsistensi dibangun dari momen seperti ini.",
     "Tercatat. Lanjutkan ritme ini.",
-    "Sip. Kamu sudah melakukannya hari ini.",
+    "Kamu sudah melakukannya hari ini. Teruskan.",
     "Baik. Satu hari lagi terlewati dengan baik.",
     "Noted. Kecil tapi nyata.",
     "Good. Jangan berhenti di sini.",
 ]
 
 _MESSAGES_CHECKIN_MORNING = [
-    "Pagi yang produktif! Kamu sudah mulai lebih awal.",
+    "Pagi yang produktif. Kamu sudah mulai lebih awal.",
     "Check-in pagi. Hari ini sudah dimulai dengan baik.",
     "Bagus, memulai hari dengan disiplin.",
 ]
@@ -41,16 +41,16 @@ _MESSAGES_STREAK_ACTIVE = [
 ]
 
 _MESSAGES_STREAK_MILESTONE = {
-    3:   "3 hari berturut-turut. Awal yang baik!",
-    7:   "7 hari. Satu minggu penuh! 🎉",
-    14:  "2 minggu. Habit ini mulai jadi bagian dari dirimu.",
-    21:  "21 hari. Titik awal kebiasaan terbentuk.",
-    30:  "30 hari. Satu bulan penuh. Ini serius. 🏆",
-    60:  "60 hari. Kamu bukan lagi pemula di habit ini.",
-    90:  "90 hari. Tiga bulan. Luar biasa.",
-    100: "100 hari. Tidak banyak orang sampai di sini. 🌟",
-    180: "180 hari. Setengah tahun konsistensi. Respect.",
-    365: "365 hari. Satu tahun penuh. Legendaris. 🏆🏆🏆",
+    3:   "3 hari berturut-turut. Awal yang baik.",
+    7:   "7 hari. Satu minggu penuh.",
+    14:  "2 minggu. Habit ini mulai menjadi bagian dari rutinitas kamu.",
+    21:  "21 hari. Pola kebiasaan mulai terbentuk.",
+    30:  "30 hari. Satu bulan penuh konsistensi.",
+    60:  "60 hari. Dua bulan tanpa putus.",
+    90:  "90 hari. Tiga bulan konsisten.",
+    100: "100 hari. Jarang ada yang sampai di titik ini.",
+    180: "180 hari. Setengah tahun konsistensi.",
+    365: "365 hari. Satu tahun penuh. Pencapaian luar biasa.",
 }
 
 _MESSAGES_STREAK_BROKEN = [
@@ -67,7 +67,7 @@ _MESSAGES_COMEBACK = [
     "Setiap hari adalah kesempatan baru untuk memulai.",
     "Yang membedakan orang konsisten bukan tidak pernah berhenti, tapi selalu kembali.",
     "Bolong beberapa hari bukan akhir. Check-in hari ini adalah bukti kamu masih mau.",
-    "Gapapa. Yuk lanjut dari sini.",
+    "Tidak masalah. Lanjutkan dari sini.",
 ]
 
 _MESSAGES_REMINDER = [
@@ -80,7 +80,7 @@ _MESSAGES_REMINDER = [
 
 _MESSAGES_SUMMARY_PERFECT = [
     "Semua habit hari ini selesai. Kerja bagus.",
-    "Hari yang produktif. Semua terceklis.",
+    "Hari yang produktif. Semua tercentang.",
     "100%. Hari ini kamu berhasil.",
     "Tidak ada yang terlewat hari ini. Pertahankan besok.",
 ]
@@ -98,12 +98,12 @@ _MESSAGES_SUMMARY_EMPTY = [
 ]
 
 _MESSAGES_WEEKLY_PERFECT = [
-    "Minggu yang sempurna! Semua habit terceklis setiap hari.",
+    "Minggu yang sempurna. Semua habit tercentang setiap hari.",
     "100% minggu ini. Luar biasa, pertahankan minggu depan.",
 ]
 
 _MESSAGES_WEEKLY_GREAT = [
-    "Minggu yang solid! Kamu hampir sempurna.",
+    "Minggu yang solid. Kamu hampir sempurna.",
     "Konsistensi kamu minggu ini luar biasa. Lanjutkan.",
 ]
 

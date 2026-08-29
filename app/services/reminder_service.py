@@ -18,10 +18,12 @@ from app.services.motivation_service import (
     get_weekly_report_message,
 )
 from app.services.streak_service import check_and_reset_broken_streaks
-from app.utils.dates import today_str, format_date_display, week_start_end
-from app.utils.helpers import emoji_progress_bar
+from app.utils.dates import today_str, format_date_display
+from app.utils.helpers import TODO_MARK, esc, progress_bar
 
 logger = logging.getLogger(__name__)
+
+PARSE_MODE = "HTML"
 
 
 async def send_daily_reminder(bot: Bot) -> None:
@@ -40,20 +42,22 @@ async def send_daily_reminder(bot: Bot) -> None:
                 continue
 
             reminder_msg = get_reminder_message(user.first_name)
-            pending_list = "\n".join(f"⬜ {h.habit.name}" for h in pending)
+            pending_list = "\n".join(
+                f"{TODO_MARK} {esc(h.habit.name)}" for h in pending
+            )
 
             text = (
-                f"⏰ *Reminder Habit*\n\n"
-                f"{reminder_msg}\n\n"
-                f"Habit yang belum selesai:\n"
+                "<b>Reminder Habit</b>\n\n"
+                f"{esc(reminder_msg)}\n\n"
+                "Belum selesai hari ini:\n"
                 f"{pending_list}\n\n"
-                f"_Ketuk tombol di bawah untuk check-in._"
+                "<i>Ketuk tombol di bawah untuk check-in.</i>"
             )
 
             await bot.send_message(
                 chat_id=user.user_id,
                 text=text,
-                parse_mode="Markdown",
+                parse_mode=PARSE_MODE,
                 reply_markup=kb_checkin_habits(pending),
             )
             sent_count += 1
@@ -98,7 +102,7 @@ async def send_daily_summary_broadcast(bot: Bot) -> None:
             await bot.send_message(
                 chat_id=user.user_id,
                 text=text,
-                parse_mode="Markdown",
+                parse_mode=PARSE_MODE,
                 reply_markup=kb_back_to_main(),
             )
             sent_count += 1
@@ -129,35 +133,35 @@ async def send_weekly_report(bot: Bot) -> None:
             start_disp = format_date_display(stats.week_start)
             end_disp = format_date_display(stats.week_end)
             pct = int(stats.completion_rate * 100)
-            progress = emoji_progress_bar(
+            progress = progress_bar(
                 stats.total_checkins, stats.total_scheduled
             )
             motivation = get_weekly_report_message(stats.completion_rate)
 
             lines = [
-                "📋 *Laporan Mingguan*",
-                f"_{start_disp} — {end_disp}_",
+                "<b>Laporan Mingguan</b>",
+                f"<i>{start_disp} — {end_disp}</i>",
                 "",
-                f"`{progress}` {pct}%",
+                f"<code>{progress}</code>  {pct}%",
                 "",
-                f"Check-in : *{stats.total_checkins} / {stats.total_scheduled}*",
+                f"Check-in : <b>{stats.total_checkins} / {stats.total_scheduled}</b>",
             ]
 
             if stats.best_habit_name:
-                lines.append(f"⭐ Terkonsisten : *{stats.best_habit_name}*")
+                lines.append(f"Terkonsisten : <b>{esc(stats.best_habit_name)}</b>")
 
             if stats.worst_habit_name:
-                lines.append(f"⚠️ Perlu fokus : *{stats.worst_habit_name}*")
+                lines.append(f"Perlu fokus  : <b>{esc(stats.worst_habit_name)}</b>")
 
             lines.append("")
-            lines.append(f"_{motivation}_")
+            lines.append(f"<i>{motivation}</i>")
 
             text = "\n".join(lines)
 
             await bot.send_message(
                 chat_id=user.user_id,
                 text=text,
-                parse_mode="Markdown",
+                parse_mode=PARSE_MODE,
                 reply_markup=kb_back_to_main(),
             )
             sent_count += 1

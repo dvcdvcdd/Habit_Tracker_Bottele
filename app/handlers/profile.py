@@ -25,10 +25,13 @@ from app.keyboards.inline import (
 )
 from app.keyboards.reply import kb_cancel, kb_remove
 from app.utils.dates import format_date_display
+from app.utils.helpers import esc
 
 logger = logging.getLogger(__name__)
 
 router = Router()
+
+PARSE_MODE = "HTML"
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +52,7 @@ async def _build_profile_text(user_id: int) -> str:
     """
     user = await get_user(user_id)
     if user is None:
-        return "❌ Data profile tidak ditemukan."
+        return "<b>Data profile tidak ditemukan.</b>"
 
     habits         = await get_habits(user_id, active_only=True)
     total_checkins = await get_total_checkins(user_id)
@@ -58,7 +61,7 @@ async def _build_profile_text(user_id: int) -> str:
 
     # Format data
     name     = user.first_name
-    username = f"@{user.username}" if user.username else "tidak diset"
+    username = f"@{user.username}" if user.username else "belum diset"
     joined   = format_date_display(user.created_at)
     reminder = user.reminder_time
     total_h  = len(habits)
@@ -66,25 +69,26 @@ async def _build_profile_text(user_id: int) -> str:
     # Best streak display
     if best_streak:
         streak_name, streak_val = best_streak
-        streak_text = f"{streak_val} hari ({streak_name})"
+        streak_text = f"{streak_val} hari ({esc(streak_name)})"
     else:
         streak_text = "belum ada"
 
     text = (
-        f"👤 *Profile Kamu*\n"
-        f"\n"
-        f"📛 Nama      : *{name}*\n"
-        f"🆔 Username  : {username}\n"
-        f"📅 Bergabung : {joined}\n"
-        f"🕐 Reminder  : {reminder} WIB\n"
-        f"\n"
-        f"📊 *Ringkasan*\n"
-        f"├ Habit aktif        : *{total_h}*\n"
-        f"├ Total check-in     : *{total_checkins}*\n"
-        f"├ Hari aktif         : *{active_days}*\n"
-        f"└ Streak terpanjang  : *{streak_text}*\n"
-        f"\n"
-        f"_Ketuk tombol di bawah untuk mengubah pengaturan._"
+        "<b>Profile</b>\n\n"
+        "<code>"
+        f"Nama      : {esc(name)}\n"
+        f"Username  : {esc(username)}\n"
+        f"Bergabung : {joined}\n"
+        f"Reminder  : {reminder} WIB"
+        "</code>\n\n"
+        "<b>Ringkasan</b>\n\n"
+        "<code>"
+        f"Habit aktif       : {total_h}\n"
+        f"Total check-in    : {total_checkins}\n"
+        f"Hari aktif        : {active_days}\n"
+        f"Streak terpanjang : {streak_text}"
+        "</code>\n\n"
+        "<i>Gunakan tombol di bawah untuk mengubah pengaturan.</i>"
     )
 
     return text
@@ -99,9 +103,9 @@ async def handle_show_profile(callback: CallbackQuery) -> None:
     text    = await _build_profile_text(user_id)
 
     await callback.message.edit_text(
-        text         = text,
-        parse_mode   = "Markdown",
-        reply_markup = kb_profile_menu(),
+        text=text,
+        parse_mode=PARSE_MODE,
+        reply_markup=kb_profile_menu(),
     )
     await callback.answer()
 
@@ -115,9 +119,9 @@ async def handle_profile_command(message: Message) -> None:
     text    = await _build_profile_text(user_id)
 
     await message.answer(
-        text         = text,
-        parse_mode   = "Markdown",
-        reply_markup = kb_profile_menu(),
+        text=text,
+        parse_mode=PARSE_MODE,
+        reply_markup=kb_profile_menu(),
     )
 
 
@@ -139,16 +143,16 @@ async def handle_reminder_start(
 
     await callback.message.edit_text(
         text=(
-            f"⏰ *Ubah Jam Reminder*\n\n"
-            f"Jam reminder kamu sekarang: *{current_time}*\n\n"
-            f"Ketik jam baru dalam format *HH:MM*\n\n"
-            f"Contoh:\n"
-            f"• `06:00` — pagi hari\n"
-            f"• `12:30` — siang\n"
-            f"• `19:00` — malam\n"
-            f"• `21:30` — sebelum tidur"
+            "<b>Ubah Jam Reminder</b>\n\n"
+            f"Jam reminder saat ini: <b>{current_time}</b>\n\n"
+            "Ketik jam baru dengan format <b>HH:MM</b>.\n\n"
+            "Contoh:\n"
+            "<code>06:00</code> — pagi hari\n"
+            "<code>12:30</code> — siang\n"
+            "<code>19:00</code> — malam\n"
+            "<code>21:30</code> — sebelum tidur"
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
     )
 
     await callback.message.answer(
@@ -172,16 +176,16 @@ async def handle_reminder_input(
     user_input = message.text.strip()
 
     # Cek batal
-    if user_input == "❌ Batal":
+    if user_input == "Batal":
         await state.clear()
         await message.answer(
-            text="Dibatalkan.",
+            text="Perubahan reminder dibatalkan.",
             reply_markup=kb_remove(),
         )
         text = await _build_profile_text(message.from_user.id)
         await message.answer(
             text=text,
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_profile_menu(),
         )
         return
@@ -190,12 +194,11 @@ async def handle_reminder_input(
     if not _is_valid_time(user_input):
         await message.answer(
             text=(
-                "⚠️ Format tidak valid.\n\n"
-                "Gunakan format *HH:MM* dengan angka 00-23 untuk jam "
-                "dan 00-59 untuk menit.\n\n"
-                "Contoh: `19:00`, `06:30`, `21:45`"
+                "<b>Format tidak valid.</b>\n\n"
+                "Gunakan format <b>HH:MM</b> — jam 00–23, menit 00–59.\n\n"
+                "Contoh: <code>19:00</code>, <code>06:30</code>, <code>21:45</code>"
             ),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_cancel(),
         )
         return
@@ -207,8 +210,8 @@ async def handle_reminder_input(
     await state.clear()
 
     await message.answer(
-        text=f"✅ Jam reminder berhasil diubah ke *{user_input}* WIB.",
-        parse_mode="Markdown",
+        text=f"Jam reminder berubah menjadi <b>{user_input}</b> WIB.",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_remove(),
     )
 
@@ -216,7 +219,7 @@ async def handle_reminder_input(
     text = await _build_profile_text(user_id)
     await message.answer(
         text=text,
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_profile_menu(),
     )
 

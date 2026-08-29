@@ -10,6 +10,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from app.config import config
 from app.database.init_db import init_db
@@ -66,6 +67,23 @@ def setup_logging() -> None:
 logger = logging.getLogger(__name__)
 
 
+async def set_bot_commands(bot: Bot) -> None:
+    """
+    Mendaftarkan menu perintah resmi bot.
+    Muncul di kolom input pesan Telegram sebagai tombol '/'.
+    """
+    commands = [
+        BotCommand(command="start",     description="Menu utama"),
+        BotCommand(command="checkin",   description="Check-in hari ini"),
+        BotCommand(command="habits",    description="Daftar habit"),
+        BotCommand(command="statistik", description="Statistik harian dan mingguan"),
+        BotCommand(command="summary",   description="Ringkasan hari ini"),
+        BotCommand(command="profile",   description="Profile dan pengaturan"),
+        BotCommand(command="help",      description="Bantuan"),
+    ]
+    await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
+
+
 async def main() -> None:
 
     setup_logging()
@@ -81,10 +99,18 @@ async def main() -> None:
 
     bot = Bot(
         token=config.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 
     dp = Dispatcher(storage=MemoryStorage())
+
+    logger.info("Mendaftarkan command menu...")
+
+    try:
+        await set_bot_commands(bot)
+        logger.info("Command menu terdaftar.")
+    except Exception as e:
+        logger.warning(f"Gagal mendaftarkan command menu: {e}")
 
     logger.info("Mendaftarkan middleware...")
 
