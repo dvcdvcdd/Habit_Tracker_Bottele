@@ -1,6 +1,31 @@
 # app/utils/helpers.py
 
+import html
 from typing import List
+
+# ===========================================================================
+# SIMBOL STATUS (karakter teks monokrom, bukan emoji)
+# Dipakai konsisten di seluruh pesan bot agar tampil modern dan profesional.
+# ===========================================================================
+
+DONE_MARK = "[x]"   # habit sudah di-check-in
+TODO_MARK = "[ ]"   # habit belum di-check-in
+OFF_MARK  = "[·]"   # habit tidak dijadwalkan hari ini / sedang dijeda
+
+CAL_DONE   = "■"    # kalender riwayat: hari check-in
+CAL_MISSED = "□"    # kalender riwayat: hari terlewat
+CAL_OFF    = "·"    # kalender riwayat: bukan jadwal
+
+BAR_FILLED = "█"    # progress bar terisi
+BAR_EMPTY  = "░"    # progress bar kosong
+
+
+def esc(text) -> str:
+    """
+    Escape teks agar aman dikirim dengan parse mode HTML.
+    Selalu gunakan untuk semua input dari user (nama habit, nama user, dll).
+    """
+    return html.escape(str(text), quote=True)
 
 
 def chunk_list(lst: list, size: int) -> List[list]:
@@ -20,31 +45,26 @@ def truncate(text: str, max_length: int = 30, suffix: str = "...") -> str:
     return text[:max_length - len(suffix)] + suffix
 
 
-def emoji_progress_bar(done: int, total: int, length: int = 10) -> str:
+def progress_bar(done: int, total: int, length: int = 10) -> str:
     """
-    Buat progress bar dari emoji.
-    Contoh: ██████░░░░ 3/5
+    Progress bar monokrom berbasis blok teks.
+    Contoh: "████████░░"
     """
-    if total == 0:
-        return f"{'░' * length} 0/0"
+    if total <= 0:
+        return BAR_EMPTY * length
 
     filled = round((done / total) * length)
     filled = max(0, min(filled, length))
-    bar = "█" * filled + "░" * (length - filled)
-    return f"{bar} {done}/{total}"
+    return BAR_FILLED * filled + BAR_EMPTY * (length - filled)
 
 
 def format_streak(streak: int) -> str:
     """
-    Ubah angka streak jadi teks dengan emoji.
+    Ubah angka streak menjadi teks yang bersih dan informatif.
     """
-    if streak == 0:
-        return "Belum ada streak"
-    if streak >= 30:
-        return f"🏆 {streak} hari"
-    if streak >= 7:
-        return f"⭐ {streak} hari"
-    return f"🔥 {streak} hari"
+    if streak <= 0:
+        return "belum ada streak"
+    return f"{streak} hari"
 
 
 def safe_int(value, default: int = 0) -> int:
@@ -125,17 +145,3 @@ def is_valid_reminder_time(time_str: str) -> tuple[bool, str]:
         return False, "Menit harus antara 00 sampai 59."
 
     return True, ""
-
-
-def escape_markdown(text: str) -> str:
-    """
-    Escape karakter khusus Markdown.
-    """
-    chars_to_escape = r"\_*[]()~`>#+-=|{}.!"
-    result = ""
-    for char in text:
-        if char in chars_to_escape:
-            result += f"\\{char}"
-        else:
-            result += char
-    return result

@@ -27,7 +27,7 @@ class UserState(str, Enum):
     """
     State percakapan user dengan bot.
     Dipakai untuk melacak sedang di tahap mana user saat input multi-langkah,
-    misalnya saat proses tambah habit (input nama → pilih jadwal → konfirmasi).
+    misalnya saat proses tambah habit (input nama -> pilih jadwal -> konfirmasi).
     """
     IDLE                = "idle"
     WAITING_HABIT_NAME  = "waiting_habit_name"

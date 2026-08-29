@@ -17,50 +17,75 @@ from app.keyboards.inline import (
 )
 from app.services.stats_service import get_comeback_text
 from app.utils.dates import weekday_name_today, format_date_display, today_str
+from app.utils.helpers import esc
 
 logger = logging.getLogger(__name__)
 
 router = Router()
+
+PARSE_MODE = "HTML"
 
 
 def _build_welcome_text(first_name: str) -> str:
     day = weekday_name_today()
     date = format_date_display(today_str())
     return (
-        f"Hei, *{first_name}!* 👋\n\n"
-        f"Selamat datang di *Habit Tracker Bot*.\n\n"
-        f"Bot ini membantu kamu membangun konsistensi "
-        f"dengan cara yang sederhana dan tidak ribet.\n\n"
-        f"Hari ini: _{day}, {date}_\n\n"
-        f"Apa yang ingin kamu lakukan?"
+        f"<b>Selamat datang kembali, {esc(first_name)}!</b>\n\n"
+        f"Hari ini: <i>{day}, {date}</i>\n\n"
+        "Apa yang ingin kamu lakukan hari ini?"
     )
 
 
 def _build_onboarding_text(first_name: str) -> str:
     return (
-        f"Hei, *{first_name}!* 👋\n\n"
-        f"Selamat datang di *Habit Tracker Bot*.\n\n"
-        f"Saya akan bantu kamu membangun kebiasaan baik "
-        f"dengan cara yang simpel.\n\n"
-        f"*Cara kerjanya gampang:*\n\n"
-        f"1️⃣ *Tambah habit* yang ingin kamu track\n"
-        f"   Contoh: Olahraga, Baca buku, Meditasi\n\n"
-        f"2️⃣ *Check-in setiap hari* saat kamu menyelesaikan habit\n"
-        f"   Cukup tekan tombol, tidak perlu ketik apa-apa\n\n"
-        f"3️⃣ *Pantau streak* dan statistik kamu\n"
-        f"   Bot akan menghitung konsistensi kamu\n\n"
-        f"4️⃣ *Terima reminder* setiap hari\n"
-        f"   Supaya kamu tidak lupa check-in\n\n"
-        f"💡 _Tips: mulai dengan 2-3 habit saja._\n\n"
-        f"Yuk mulai dengan menambahkan habit pertamamu!"
+        f"<b>Selamat datang, {esc(first_name)}!</b>\n\n"
+        "Selamat datang di <b>Habit Tracker</b> — "
+        "alat untuk membangun kebiasaan baik secara konsisten.\n\n"
+        "<b>Cara kerja:</b>\n\n"
+        "1. <b>Tambah habit</b> yang ingin kamu jaga\n"
+        "   Contoh: olahraga, membaca, meditasi\n\n"
+        "2. <b>Check-in setiap hari</b> saat habit selesai dilakukan\n"
+        "   Cukup satu ketukan tombol, tanpa perlu mengetik\n\n"
+        "3. <b>Pantau streak dan statistik</b>\n"
+        "   Konsistensi kamu dihitung dan dilaporkan otomatis\n\n"
+        "4. <b>Terima reminder harian</b>\n"
+        "   Pengingat agar tidak ada habit yang terlewat\n\n"
+        "<i>Tips: mulailah dengan 2–3 habit saja.</i>\n\n"
+        "Tambahkan habit pertamamu untuk memulai."
     )
 
 
 def _build_menu_text(first_name: str) -> str:
     return (
-        f"Hei, *{first_name}!* 🏠\n\n"
-        f"Kamu di menu utama.\n"
-        f"Pilih yang ingin kamu lakukan:"
+        "<b>Menu Utama</b>\n\n"
+        f"Selamat datang, {esc(first_name)}.\n"
+        "Silakan pilih aksi di bawah ini."
+    )
+
+
+def _build_help_text() -> str:
+    return (
+        "<b>Pusat Bantuan</b>\n\n"
+        "<b>Cara pakai</b>\n"
+        "1. Tambahkan habit yang ingin kamu jaga\n"
+        "2. Setiap hari, buka bot dan tekan <b>Check-in</b>\n"
+        "3. Tandai habit yang sudah kamu lakukan\n"
+        "4. Pantau streak dan statistik kamu\n\n"
+        "<b>Perintah</b>\n"
+        "<code>/start</code> — buka menu utama\n"
+        "<code>/checkin</code> — check-in hari ini\n"
+        "<code>/habits</code> — daftar habit\n"
+        "<code>/statistik</code> — statistik harian dan mingguan\n"
+        "<code>/summary</code> — ringkasan hari ini\n"
+        "<code>/profile</code> — profile dan pengaturan\n"
+        "<code>/help</code> — bantuan ini\n\n"
+        "<b>Tips</b>\n"
+        "• Mulai dengan 2–3 habit saja\n"
+        "• Check-in setiap hari, meskipun hanya satu habit\n"
+        "• Streak pendek yang konsisten lebih baik daripada "
+        "target besar yang tidak tercapai\n\n"
+        "<i>Bot akan mengingatkan kamu setiap hari "
+        "sesuai jam reminder kamu.</i>"
     )
 
 
@@ -87,7 +112,7 @@ async def handle_start(message: Message) -> None:
     if is_new_user:
         await message.answer(
             text=_build_onboarding_text(user.first_name),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_onboarding(),
         )
         return
@@ -97,12 +122,12 @@ async def handle_start(message: Message) -> None:
     if comeback_text:
         await message.answer(
             text=comeback_text,
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
         )
 
     await message.answer(
         text=_build_welcome_text(user.first_name),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_main_menu(),
     )
 
@@ -111,7 +136,7 @@ async def handle_start(message: Message) -> None:
 async def handle_onboarding_skip(callback: CallbackQuery) -> None:
     await callback.message.edit_text(
         text=_build_menu_text(callback.from_user.first_name),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_main_menu(),
     )
     await callback.answer()
@@ -121,37 +146,16 @@ async def handle_onboarding_skip(callback: CallbackQuery) -> None:
 async def handle_menu_command(message: Message) -> None:
     await message.answer(
         text=_build_menu_text(message.from_user.first_name),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_main_menu(),
     )
 
 
 @router.message(Command("help"))
 async def handle_help(message: Message) -> None:
-    help_text = (
-        "*Cara pakai Habit Tracker Bot:*\n\n"
-        "1️⃣ Tambahkan habit yang ingin kamu track\n"
-        "2️⃣ Setiap hari, buka bot dan tekan *Check-in*\n"
-        "3️⃣ Centang habit yang sudah kamu lakukan\n"
-        "4️⃣ Pantau streak dan statistik kamu\n\n"
-        "*Command yang tersedia:*\n"
-        "/start     — buka menu utama\n"
-        "/menu      — kembali ke menu utama\n"
-        "/help      — tampilkan bantuan ini\n"
-        "/profile   — lihat profile kamu\n"
-        "/statistik — lihat statistik\n"
-        "/summary   — ringkasan hari ini\n\n"
-        "*Tips:*\n"
-        "• Mulai dengan 2-3 habit saja\n"
-        "• Check-in setiap hari meski hanya 1 habit\n"
-        "• Streak yang pendek tapi konsisten lebih baik "
-        "dari target besar yang tidak tercapai\n\n"
-        "_Bot ini akan mengingatkan kamu setiap hari._"
-    )
-
     await message.answer(
-        text=help_text,
-        parse_mode="Markdown",
+        text=_build_help_text(),
+        parse_mode=PARSE_MODE,
         reply_markup=kb_main_menu(),
     )
 
@@ -160,7 +164,7 @@ async def handle_help(message: Message) -> None:
 async def handle_back_to_main(callback: CallbackQuery) -> None:
     await callback.message.edit_text(
         text=_build_menu_text(callback.from_user.first_name),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_main_menu(),
     )
     await callback.answer()

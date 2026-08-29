@@ -54,16 +54,17 @@ class ErrorHandlerMiddleware(BaseMiddleware):
         Kirim pesan error yang ramah ke user.
         """
         error_text = (
-            "⚠️ Terjadi kesalahan tidak terduga.\n\n"
-            "Coba lagi, atau ketuk tombol di bawah untuk kembali ke menu utama.\n\n"
-            "_Kalau masalah terus berulang, coba kirim /start untuk restart._"
+            "<b>Terjadi kesalahan yang tidak terduga.</b>\n\n"
+            "Silakan coba lagi, atau ketuk tombol di bawah "
+            "untuk kembali ke menu utama.\n\n"
+            "<i>Jika masalah berlanjut, kirim /start untuk memulai ulang.</i>"
         )
 
         try:
             if isinstance(event, Message):
                 await event.answer(
                     text         = error_text,
-                    parse_mode   = "Markdown",
+                    parse_mode   = "HTML",
                     reply_markup = kb_back_to_main(),
                 )
 
@@ -72,14 +73,14 @@ class ErrorHandlerMiddleware(BaseMiddleware):
                 try:
                     await event.message.edit_text(
                         text         = error_text,
-                        parse_mode   = "Markdown",
+                        parse_mode   = "HTML",
                         reply_markup = kb_back_to_main(),
                     )
                 except Exception:
                     # Kalau edit gagal, kirim pesan baru
                     await event.message.answer(
                         text         = error_text,
-                        parse_mode   = "Markdown",
+                        parse_mode   = "HTML",
                         reply_markup = kb_back_to_main(),
                     )
 

@@ -4,6 +4,7 @@ import logging
 from datetime import date, timedelta
 
 from aiogram import Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
@@ -46,7 +47,7 @@ from app.services.streak_service import is_habit_scheduled_today_for_date
 from app.utils.helpers import (
     sanitize_text,
     is_valid_habit_name,
-    escape_markdown,
+    esc,
     format_streak,
 )
 from app.utils.dates import today_str, format_date_display
@@ -54,6 +55,8 @@ from app.utils.dates import today_str, format_date_display
 logger = logging.getLogger(__name__)
 
 router = Router()
+
+PARSE_MODE = "HTML"
 
 
 class EditHabitStates(StatesGroup):
@@ -75,28 +78,53 @@ async def _get_raw_active_status(habit_id: int, user_id: int) -> int:
 # Daftar habit
 # ---------------------------------------------------------------------------
 
-@router.callback_query(lambda c: c.data == CB_MENU_HABITS)
-async def handle_show_habits(callback: CallbackQuery) -> None:
-    user_id = callback.from_user.id
-
+async def _render_habit_list(user_id: int) -> tuple[str, object]:
+    """
+    Menyusun teks daftar habit beserta keyboard-nya.
+    Dipakai bersama oleh tombol menu dan perintah /habits.
+    """
     habits_with_status = await get_habits_with_status(user_id)
     text = build_habit_list_text(habits_with_status)
 
     all_habits = await get_all_habits_including_paused(user_id)
 
     if all_habits:
-        await callback.message.edit_text(
-            text=text + "\n\n_Ketuk habit untuk melihat detail._",
-            parse_mode="Markdown",
-            reply_markup=kb_habit_picker(all_habits, CB_PREFIX_HABIT_DETAIL),
-        )
+        text += "\n\n<i>Ketuk habit untuk melihat detail.</i>"
+        reply_markup = kb_habit_picker(all_habits, CB_PREFIX_HABIT_DETAIL)
     else:
-        await callback.message.edit_text(
-            text=text,
-            parse_mode="Markdown",
-            reply_markup=kb_back_to_main(),
-        )
+        reply_markup = kb_back_to_main()
+
+    return text, reply_markup
+
+
+@router.callback_query(lambda c: c.data == CB_MENU_HABITS)
+async def handle_show_habits(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+
+    text, reply_markup = await _render_habit_list(user_id)
+
+    await callback.message.edit_text(
+        text=text,
+        parse_mode=PARSE_MODE,
+        reply_markup=reply_markup,
+    )
     await callback.answer()
+
+
+@router.message(Command("habits"))
+async def handle_habits_command(message: Message) -> None:
+    """
+    Menampilkan daftar habit via perintah /habits.
+    """
+    user_id = message.from_user.id
+
+    text, reply_markup = await _render_habit_list(user_id)
+
+    await message.answer(
+        text=text,
+        parse_mode=PARSE_MODE,
+        reply_markup=reply_markup,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -125,22 +153,22 @@ async def handle_habit_detail(callback: CallbackQuery) -> None:
 
     schedule_text = format_schedule_display(habit.schedule)
     streak_text = format_streak(habit.current_streak)
-    status_text = "⏸ *DI-PAUSE*" if is_paused else "🟢 Aktif"
 
     text = (
-        f"📌 *Detail Habit*\n"
-        f"\n"
-        f"📝 Nama     : *{escape_markdown(habit.name)}*\n"
-        f"📅 Jadwal   : {schedule_text}\n"
-        f"🔥 Streak   : {streak_text}\n"
-        f"🏆 Terbaik  : {habit.longest_streak} hari\n"
-        f"📊 Status   : {status_text}\n"
-        f"📆 Dibuat   : {habit.created_at}\n"
+        "<b>Detail Habit</b>\n\n"
+        "<code>"
+        f"Nama    : {esc(habit.name)}\n"
+        f"Jadwal  : {schedule_text}\n"
+        f"Streak  : {streak_text}\n"
+        f"Terbaik : {habit.longest_streak} hari\n"
+        f"Status  : {'Dijeda' if is_paused else 'Aktif'}\n"
+        f"Dibuat  : {habit.created_at}"
+        "</code>"
     )
 
     await callback.message.edit_text(
         text=text,
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_habit_detail(habit_id, is_paused),
     )
     await callback.answer()
@@ -169,12 +197,11 @@ async def handle_history(callback: CallbackQuery) -> None:
 
     history = await get_checkin_history_30days(habit_id)
 
-    # Bangun kalender visual
     calendar_text = _build_calendar_text(habit, history)
 
     await callback.message.edit_text(
         text=calendar_text,
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_history_back(habit_id),
     )
     await callback.answer()
@@ -185,26 +212,28 @@ def _build_calendar_text(habit, history: dict) -> str:
     Bangun tampilan kalender 30 hari.
 
     Format:
-    📅 Riwayat 30 Hari — Olahraga
+    Riwayat 30 Hari
+    Habit: Olahraga
+    1 Agustus — 29 Agustus 2026
 
     Sen Sel Rab Kam Jum Sab Min
-     ✅  ✅  ❌  ✅  ✅  ·   ·
-     ✅  ✅  ✅  ❌  ✅  ·   ·
-     ✅  ✅  ✅  ✅  ·   ·   ·
-
-    ✅ = check-in  ❌ = terlewat  · = bukan jadwal
+     ■   ■   □   ■   ■   ·   ·
+     ■   ■   ■   □   ■   ·   ·
 
     Total: 18/22 (82%)
+
+    ■ check-in   □ terlewat   · bukan jadwal
     """
     end = date.fromisoformat(today_str())
     start = end - timedelta(days=29)
 
     lines = [
-        f"📅 *Riwayat 30 Hari*",
-        f"Habit: *{escape_markdown(habit.name)}*",
-        f"_{format_date_display(start.isoformat())} — {format_date_display(end.isoformat())}_",
+        "<b>Riwayat 30 Hari</b>",
+        f"Habit: <b>{esc(habit.name)}</b>",
+        f"<i>{format_date_display(start.isoformat())} — "
+        f"{format_date_display(end.isoformat())}</i>",
         "",
-        "`Sen Sel Rab Kam Jum Sab Min`",
+        "<code>Sen Sel Rab Kam Jum Sab Min</code>",
     ]
 
     # Bangun grid per minggu
@@ -234,14 +263,14 @@ def _build_calendar_text(habit, history: dict) -> str:
             if is_scheduled:
                 total_scheduled += 1
                 if history[date_str]:
-                    row += "  ✅"
+                    row += "  ■"
                     total_done += 1
                 else:
-                    row += "  ❌"
+                    row += "  □"
             else:
                 # Bukan jadwal
                 if history[date_str]:
-                    row += "  ✅"  # bonus check-in
+                    row += "  ■"  # bonus check-in
                     total_done += 1
                 else:
                     row += "  · "
@@ -250,26 +279,26 @@ def _build_calendar_text(habit, history: dict) -> str:
 
         # Akhir minggu (Minggu)
         if current.weekday() == 6:
-            lines.append(f"`{row}`")
+            lines.append(f"<code>{row}</code>")
             row = ""
 
         current += timedelta(days=1)
 
     # Sisa row yang belum ditambahkan
     if row:
-        lines.append(f"`{row}`")
+        lines.append(f"<code>{row}</code>")
 
     # Statistik
     lines.append("")
     if total_scheduled > 0:
         pct = int((total_done / total_scheduled) * 100)
-        lines.append(f"Total: *{total_done}/{total_scheduled}* ({pct}%)")
+        lines.append(f"Total: <b>{total_done}/{total_scheduled}</b> ({pct}%)")
     else:
-        lines.append(f"Total check-in: *{total_done}*")
+        lines.append(f"Total check-in: <b>{total_done}</b>")
 
     # Keterangan
     lines.append("")
-    lines.append("✅ check-in  ❌ terlewat  · bukan jadwal")
+    lines.append("■ check-in   □ terlewat   · bukan jadwal")
 
     return "\n".join(lines)
 
@@ -298,11 +327,11 @@ async def handle_edit_name_start(
 
     await callback.message.edit_text(
         text=(
-            f"✏️ *Edit Nama Habit*\n\n"
-            f"Nama sekarang: *{escape_markdown(habit.name)}*\n\n"
-            f"Ketik nama baru:"
+            "<b>Edit Nama Habit</b>\n\n"
+            f"Nama sekarang: <b>{esc(habit.name)}</b>\n\n"
+            "Ketik nama baru, atau tekan tombol <b>Batal</b> di keyboard."
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
     )
 
     await callback.message.answer(
@@ -322,10 +351,17 @@ async def handle_edit_name_input(
 ) -> None:
     user_input = message.text.strip() if message.text else ""
 
-    if user_input == "❌ Batal":
+    if user_input == "Batal":
         await state.clear()
-        await message.answer(text="Dibatalkan.", reply_markup=kb_remove())
-        await message.answer(text="Kembali ke menu:", reply_markup=kb_back_to_main())
+        await message.answer(
+            text="Perubahan nama dibatalkan.",
+            reply_markup=kb_remove(),
+        )
+        await message.answer(
+            text="<i>Kembali ke menu.</i>",
+            parse_mode=PARSE_MODE,
+            reply_markup=kb_back_to_main(),
+        )
         return
 
     clean_name = sanitize_text(user_input)
@@ -333,7 +369,8 @@ async def handle_edit_name_input(
 
     if not is_valid:
         await message.answer(
-            text=f"⚠️ {error_msg}\n\nCoba lagi:",
+            text=f"<b>{esc(error_msg)}</b>\n\nSilakan coba lagi:",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_cancel(),
         )
         return
@@ -352,20 +389,24 @@ async def handle_edit_name_input(
 
     if success:
         await update_last_active(user_id)
-        safe_name = escape_markdown(clean_name)
         await message.answer(
-            text=f'✅ Nama berhasil diubah menjadi *"{safe_name}"*',
-            parse_mode="Markdown",
+            text=f'Nama habit berhasil diubah menjadi <b>"{esc(clean_name)}"</b>.',
+            parse_mode=PARSE_MODE,
             reply_markup=kb_remove(),
         )
-        logger.info(f"User {user_id} edit nama habit {habit_id} → {clean_name}")
+        logger.info(f"User {user_id} edit nama habit {habit_id} -> {clean_name}")
     else:
         await message.answer(
-            text="⚠️ Gagal mengubah nama.",
+            text="<b>Gagal mengubah nama.</b> Silakan coba lagi.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_remove(),
         )
 
-    await message.answer(text="Kembali ke menu:", reply_markup=kb_back_to_main())
+    await message.answer(
+        text="<i>Kembali ke menu.</i>",
+        parse_mode=PARSE_MODE,
+        reply_markup=kb_back_to_main(),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -392,12 +433,12 @@ async def handle_edit_schedule_start(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(
         text=(
-            f"📅 *Edit Jadwal*\n\n"
-            f"Habit: *{escape_markdown(habit.name)}*\n"
+            "<b>Edit Jadwal</b>\n\n"
+            f"Habit: <b>{esc(habit.name)}</b>\n"
             f"Jadwal sekarang: {current_schedule}\n\n"
-            f"Pilih jadwal baru:"
+            "Pilih jadwal baru:"
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_edit_schedule(habit_id),
     )
     await callback.answer()
@@ -424,16 +465,17 @@ async def handle_edit_schedule_pick(callback: CallbackQuery) -> None:
         schedule_text = format_schedule_display(schedule)
         await callback.message.edit_text(
             text=(
-                f"✅ Jadwal berhasil diubah ke *{schedule_text}*\n\n"
-                f"_Streak tetap terjaga._"
+                f"Jadwal berhasil diubah menjadi <b>{schedule_text}</b>.\n\n"
+                "<i>Streak tetap terjaga.</i>"
             ),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
-        logger.info(f"User {user_id} edit jadwal habit {habit_id} → {schedule}")
+        logger.info(f"User {user_id} edit jadwal habit {habit_id} -> {schedule}")
     else:
         await callback.message.edit_text(
-            text="⚠️ Gagal mengubah jadwal.",
+            text="<b>Gagal mengubah jadwal.</b> Silakan coba lagi.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
     await callback.answer()
@@ -466,18 +508,19 @@ async def handle_pause_habit(callback: CallbackQuery) -> None:
         await update_last_active(user_id)
         await callback.message.edit_text(
             text=(
-                f"⏸ *Habit di-pause*\n\n"
-                f"Habit *{escape_markdown(habit.name)}* tidak akan muncul "
-                f"di check-in harian sampai kamu aktifkan kembali.\n\n"
-                f"_Streak kamu tetap aman selama di-pause._"
+                "<b>Habit Dijeda</b>\n\n"
+                f"Habit <b>{esc(habit.name)}</b> tidak akan muncul "
+                "di check-in harian sampai kamu mengaktifkannya kembali.\n\n"
+                "<i>Streak kamu tetap aman selama dijeda.</i>"
             ),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
         logger.info(f"User {user_id} pause habit {habit_id}")
     else:
         await callback.message.edit_text(
-            text="⚠️ Gagal pause habit.",
+            text="<b>Gagal menjeda habit.</b> Silakan coba lagi.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
     await callback.answer()
@@ -510,17 +553,18 @@ async def handle_resume_habit(callback: CallbackQuery) -> None:
         await update_last_active(user_id)
         await callback.message.edit_text(
             text=(
-                f"▶️ *Habit diaktifkan kembali*\n\n"
-                f"Habit *{escape_markdown(habit.name)}* sudah aktif lagi.\n\n"
-                f"_Streak sebelumnya: {format_streak(habit.current_streak)}_"
+                "<b>Habit Aktif Kembali</b>\n\n"
+                f"Habit <b>{esc(habit.name)}</b> sudah aktif lagi.\n\n"
+                f"<i>Streak sebelumnya: {format_streak(habit.current_streak)}</i>"
             ),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
         logger.info(f"User {user_id} resume habit {habit_id}")
     else:
         await callback.message.edit_text(
-            text="⚠️ Gagal mengaktifkan habit.",
+            text="<b>Gagal mengaktifkan habit.</b> Silakan coba lagi.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
     await callback.answer()
@@ -552,14 +596,16 @@ async def handle_delete_from_detail(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(
         text=(
-            f"🗑 *Konfirmasi Hapus*\n\n"
-            f"Kamu yakin ingin menghapus habit ini?\n\n"
-            f"📌 Nama   : *{escape_markdown(habit.name)}*\n"
-            f"📅 Jadwal : {schedule_display}\n"
-            f"🔥 Streak : {habit.current_streak} hari\n\n"
-            f"⚠️ _Streak akan hilang._"
+            "<b>Konfirmasi Hapus</b>\n\n"
+            f"Habit <b>{esc(habit.name)}</b> akan dihapus secara permanen.\n\n"
+            "<code>"
+            f"Jadwal : {schedule_display}\n"
+            f"Streak : {habit.current_streak} hari"
+            "</code>\n\n"
+            "<i>Riwayat streak akan ikut hilang. "
+            "Tindakan ini tidak dapat dibatalkan.</i>"
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_delete_confirm(habit_id, habit.name),
     )
     await callback.answer()
@@ -577,19 +623,22 @@ async def handle_delete_confirm(callback: CallbackQuery) -> None:
         await callback.answer("Terjadi kesalahan.", show_alert=True)
         return
 
+    habit = await get_habit_by_id_any_status(habit_id, user_id)
     success = await soft_delete_habit(habit_id, user_id)
 
     if success:
         await update_last_active(user_id)
+        habit_name = habit.name if habit else "Habit"
         await callback.message.edit_text(
-            text="✅ Habit berhasil dihapus.",
-            parse_mode="Markdown",
+            text=f"Habit <b>{esc(habit_name)}</b> berhasil dihapus.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
         logger.info(f"User {user_id} hapus habit {habit_id}")
     else:
         await callback.message.edit_text(
-            text="⚠️ Gagal menghapus habit.",
+            text="<b>Gagal menghapus habit.</b> Silakan coba lagi.",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
     await callback.answer()

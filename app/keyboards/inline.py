@@ -3,8 +3,8 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.utils.enums import HabitSchedule, SCHEDULE_DISPLAY
-from app.utils.helpers import chunk_list, truncate
+from app.utils.enums import HabitSchedule
+from app.utils.helpers import DONE_MARK, TODO_MARK, chunk_list, truncate
 
 
 # ===========================================================================
@@ -45,7 +45,20 @@ CB_ONBOARDING_SKIP  = "onboarding:skip"
 
 
 # ===========================================================================
-# SECTION 2 — MENU UTAMA
+# SECTION 2 — OPSI JADWAL (dipakai bersama oleh beberapa keyboard)
+# ===========================================================================
+
+SCHEDULE_OPTIONS = [
+    (HabitSchedule.EVERYDAY,    "Setiap Hari"),
+    (HabitSchedule.WEEKDAY,     "Senin – Jumat"),
+    (HabitSchedule.MON_WED_FRI, "Senin, Rabu, Jumat"),
+    (HabitSchedule.TUE_THU_SAT, "Selasa, Kamis, Sabtu"),
+    (HabitSchedule.WEEKEND,     "Sabtu & Minggu"),
+]
+
+
+# ===========================================================================
+# SECTION 3 — MENU UTAMA
 # ===========================================================================
 
 def kb_main_menu() -> InlineKeyboardMarkup:
@@ -53,36 +66,36 @@ def kb_main_menu() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="✅ Check-in Hari Ini",
+            text="Check-in Hari Ini",
             callback_data=CB_MENU_CHECKIN,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="📋 Habit Saya",
+            text="Habit Saya",
             callback_data=CB_MENU_HABITS,
         ),
         InlineKeyboardButton(
-            text="➕ Tambah Habit",
+            text="Tambah Habit",
             callback_data=CB_HABIT_ADD,
         ),
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="📊 Statistik",
+            text="Statistik",
             callback_data=CB_MENU_STATS,
         ),
         InlineKeyboardButton(
-            text="📝 Summary",
+            text="Ringkasan",
             callback_data=CB_MENU_SUMMARY,
         ),
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="👤 Profile",
+            text="Profile",
             callback_data=CB_MENU_PROFILE,
         ),
     )
@@ -95,14 +108,14 @@ def kb_onboarding() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="➕ Tambah Habit Pertama",
+            text="Tambah Habit Pertama",
             callback_data=CB_HABIT_ADD,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="⏭ Lewati, Langsung ke Menu",
+            text="Lewati, Langsung ke Menu",
             callback_data=CB_ONBOARDING_SKIP,
         )
     )
@@ -111,14 +124,14 @@ def kb_onboarding() -> InlineKeyboardMarkup:
 
 
 # ===========================================================================
-# SECTION 3 — CHECK-IN
+# SECTION 4 — CHECK-IN
 # ===========================================================================
 
 def kb_checkin_habits(habits: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     for item in habits:
-        icon = "✅" if item.is_done_today else "⬜"
+        icon = DONE_MARK if item.is_done_today else TODO_MARK
         name = truncate(item.habit.name, 28)
 
         builder.row(
@@ -130,7 +143,7 @@ def kb_checkin_habits(habits: list) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -143,11 +156,11 @@ def kb_checkin_done() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="📊 Lihat Statistik",
+            text="Lihat Statistik",
             callback_data=CB_MENU_STATS,
         ),
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         ),
     )
@@ -156,7 +169,7 @@ def kb_checkin_done() -> InlineKeyboardMarkup:
 
 
 # ===========================================================================
-# SECTION 4 — HABIT MANAGEMENT
+# SECTION 5 — HABIT MANAGEMENT
 # ===========================================================================
 
 def kb_habit_list_menu() -> InlineKeyboardMarkup:
@@ -164,21 +177,21 @@ def kb_habit_list_menu() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="➕ Tambah Habit",
+            text="Tambah Habit",
             callback_data=CB_HABIT_ADD,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="🗑 Hapus Habit",
+            text="Hapus Habit",
             callback_data=CB_HABIT_DELETE,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -202,7 +215,7 @@ def kb_delete_habit_picker(habits: list) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="❌ Batal",
+            text="Batal",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -215,11 +228,11 @@ def kb_delete_confirm(habit_id: int, habit_name: str) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="✅ Ya, Hapus",
+            text="Ya, Hapus",
             callback_data=f"{CB_PREFIX_DELETE_CONFIRM}:{habit_id}",
         ),
         InlineKeyboardButton(
-            text="❌ Batal",
+            text="Batal",
             callback_data=CB_BACK_MAIN,
         ),
     )
@@ -243,7 +256,7 @@ def kb_habit_picker(habits: list, callback_prefix: str) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -256,18 +269,18 @@ def kb_habit_detail(habit_id: int, is_paused: bool = False) -> InlineKeyboardMar
 
     builder.row(
         InlineKeyboardButton(
-            text="📅 Riwayat 30 Hari",
+            text="Riwayat 30 Hari",
             callback_data=f"{CB_PREFIX_HISTORY}:{habit_id}",
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="✏️ Edit Nama",
+            text="Edit Nama",
             callback_data=f"{CB_PREFIX_EDIT_NAME}:{habit_id}",
         ),
         InlineKeyboardButton(
-            text="📅 Edit Jadwal",
+            text="Edit Jadwal",
             callback_data=f"{CB_PREFIX_EDIT_SCHEDULE}:{habit_id}",
         ),
     )
@@ -275,25 +288,25 @@ def kb_habit_detail(habit_id: int, is_paused: bool = False) -> InlineKeyboardMar
     if is_paused:
         builder.row(
             InlineKeyboardButton(
-                text="▶️ Aktifkan Kembali",
+                text="Aktifkan Kembali",
                 callback_data=f"{CB_PREFIX_RESUME}:{habit_id}",
             )
         )
     else:
         builder.row(
             InlineKeyboardButton(
-                text="⏸ Pause Habit",
+                text="Jeda Habit",
                 callback_data=f"{CB_PREFIX_PAUSE}:{habit_id}",
             )
         )
 
     builder.row(
         InlineKeyboardButton(
-            text="🗑 Hapus",
+            text="Hapus",
             callback_data=f"{CB_PREFIX_DELETE}:{habit_id}",
         ),
         InlineKeyboardButton(
-            text="🔙 Kembali",
+            text="Kembali",
             callback_data=CB_MENU_HABITS,
         ),
     )
@@ -304,15 +317,7 @@ def kb_habit_detail(habit_id: int, is_paused: bool = False) -> InlineKeyboardMar
 def kb_edit_schedule(habit_id: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
-    schedule_options = [
-        (HabitSchedule.EVERYDAY,    "📅 Setiap Hari"),
-        (HabitSchedule.WEEKDAY,     "💼 Senin – Jumat"),
-        (HabitSchedule.MON_WED_FRI, "🔄 Senin, Rabu, Jumat"),
-        (HabitSchedule.TUE_THU_SAT, "🔄 Selasa, Kamis, Sabtu"),
-        (HabitSchedule.WEEKEND,     "🎉 Sabtu & Minggu"),
-    ]
-
-    for schedule_value, label in schedule_options:
+    for schedule_value, label in SCHEDULE_OPTIONS:
         builder.row(
             InlineKeyboardButton(
                 text=label,
@@ -322,7 +327,7 @@ def kb_edit_schedule(habit_id: int) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="❌ Batal",
+            text="Batal",
             callback_data=f"{CB_PREFIX_HABIT_DETAIL}:{habit_id}",
         )
     )
@@ -331,21 +336,13 @@ def kb_edit_schedule(habit_id: int) -> InlineKeyboardMarkup:
 
 
 # ===========================================================================
-# SECTION 5 — SCHEDULE PICKER
+# SECTION 6 — SCHEDULE PICKER
 # ===========================================================================
 
 def kb_schedule_picker() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
-    schedule_options = [
-        (HabitSchedule.EVERYDAY,    "📅 Setiap Hari"),
-        (HabitSchedule.WEEKDAY,     "💼 Senin – Jumat"),
-        (HabitSchedule.MON_WED_FRI, "🔄 Senin, Rabu, Jumat"),
-        (HabitSchedule.TUE_THU_SAT, "🔄 Selasa, Kamis, Sabtu"),
-        (HabitSchedule.WEEKEND,     "🎉 Sabtu & Minggu"),
-    ]
-
-    for schedule_value, label in schedule_options:
+    for schedule_value, label in SCHEDULE_OPTIONS:
         builder.row(
             InlineKeyboardButton(
                 text=label,
@@ -355,7 +352,7 @@ def kb_schedule_picker() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="❌ Batal",
+            text="Batal",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -364,7 +361,7 @@ def kb_schedule_picker() -> InlineKeyboardMarkup:
 
 
 # ===========================================================================
-# SECTION 6 — STATS, PROFILE & NAVIGATION
+# SECTION 7 — STATS, PROFILE & NAVIGATION
 # ===========================================================================
 
 def kb_stats_menu() -> InlineKeyboardMarkup:
@@ -372,18 +369,18 @@ def kb_stats_menu() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="📝 Summary Hari Ini",
+            text="Ringkasan Hari Ini",
             callback_data=CB_MENU_SUMMARY,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="✅ Check-in Sekarang",
+            text="Check-in Sekarang",
             callback_data=CB_MENU_CHECKIN,
         ),
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         ),
     )
@@ -396,18 +393,18 @@ def kb_profile_menu() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="⏰ Ubah Jam Reminder",
+            text="Ubah Jam Reminder",
             callback_data=CB_REMINDER_SET,
         )
     )
 
     builder.row(
         InlineKeyboardButton(
-            text="📋 Habit Saya",
+            text="Habit Saya",
             callback_data=CB_MENU_HABITS,
         ),
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         ),
     )
@@ -420,7 +417,7 @@ def kb_back_to_main() -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -434,21 +431,21 @@ def kb_after_checkin(all_done: bool) -> InlineKeyboardMarkup:
     if all_done:
         builder.row(
             InlineKeyboardButton(
-                text="📊 Lihat Statistik",
+                text="Lihat Statistik",
                 callback_data=CB_MENU_STATS,
             )
         )
     else:
         builder.row(
             InlineKeyboardButton(
-                text="✅ Lanjut Check-in",
+                text="Lanjut Check-in",
                 callback_data=CB_MENU_CHECKIN,
             )
         )
 
     builder.row(
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         )
     )
@@ -461,11 +458,11 @@ def kb_history_back(habit_id: int) -> InlineKeyboardMarkup:
 
     builder.row(
         InlineKeyboardButton(
-            text="🔙 Kembali ke Detail",
+            text="Kembali ke Detail",
             callback_data=f"{CB_PREFIX_HABIT_DETAIL}:{habit_id}",
         ),
         InlineKeyboardButton(
-            text="🏠 Menu Utama",
+            text="Menu Utama",
             callback_data=CB_BACK_MAIN,
         ),
     )

@@ -145,7 +145,7 @@ def week_start_end() -> tuple[str, str]:
 def format_date_display(date_str: str) -> str:
     """
     Mengubah format tanggal dari "YYYY-MM-DD" menjadi tampilan lebih ramah.
-    Contoh: "2025-01-15" → "15 Januari 2025"
+    Contoh: "2025-01-15" -> "15 Januari 2025"
     """
     months = [
         "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",

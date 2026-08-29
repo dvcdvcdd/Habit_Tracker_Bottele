@@ -96,7 +96,7 @@ async def process_checkin_streak(habit: Habit) -> Tuple[int, int, str]:
 
     logger.info(
         f"Habit {habit.habit_id} streak: "
-        f"{habit.current_streak} → {new_streak} ({status})"
+        f"{habit.current_streak} -> {new_streak} ({status})"
     )
 
     return new_streak, new_longest, status

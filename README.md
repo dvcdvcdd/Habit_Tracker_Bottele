@@ -1,58 +1,58 @@
-# 🎯 Habit Tracker Telegram Bot
+# Habit Tracker Telegram Bot
 
-Bot Telegram untuk membantu membangun konsistensi kebiasaan harian.  
-Track habit, pantau streak, dan tetap konsisten setiap hari.
+Bot Telegram untuk membangun kebiasaan harian secara konsisten.
+Kelola habit, pantau streak, dan terima reminder — semuanya dari dalam Telegram.
 
 ---
 
-## ✨ Fitur
+## Fitur
 
 ### Manajemen Habit
-- ➕ Tambah habit baru dengan jadwal fleksibel
-- ✏️ Edit nama dan jadwal habit
-- ⏸ Pause habit sementara tanpa merusak streak
-- 🗑 Hapus habit (soft delete, data check-in tetap aman)
-- 📋 Lihat daftar semua habit dengan status hari ini
+- Tambah habit baru dengan jadwal fleksibel
+- Edit nama dan jadwal habit
+- Jeda habit sementara tanpa merusak streak
+- Hapus habit (soft delete, data check-in tetap aman)
+- Lihat daftar semua habit dengan status hari ini
 
 ### Check-in Harian
-- ✅ Check-in habit dengan satu kali tekan tombol
-- 📊 Progress bar harian
-- 🔥 Streak otomatis dihitung per habit
-- 🎉 Pesan milestone saat streak mencapai 7, 14, 21, 30 hari, dan seterusnya
+- Check-in cukup dengan satu ketukan tombol
+- Progress bar harian
+- Streak dihitung otomatis per habit
+- Pesan milestone di hari ke-7, 14, 21, 30, dan seterusnya
 
 ### Jadwal Fleksibel
-- 📅 Setiap hari
-- 💼 Senin – Jumat (weekday)
-- 🔄 Senin, Rabu, Jumat
-- 🔄 Selasa, Kamis, Sabtu
-- 🎉 Sabtu & Minggu (weekend)
+- Setiap hari
+- Senin – Jumat (weekday)
+- Senin, Rabu, Jumat
+- Selasa, Kamis, Sabtu
+- Sabtu & Minggu (weekend)
 
 ### Statistik & Laporan
-- 📊 Statistik harian dan mingguan
-- 📝 Daily summary
-- 📋 Weekly report otomatis setiap Minggu
-- 📅 Riwayat check-in 30 hari dalam format kalender visual
+- Statistik harian dan mingguan
+- Ringkasan harian otomatis (daily summary)
+- Laporan mingguan otomatis setiap Minggu
+- Riwayat check-in 30 hari dalam format kalender
 
 ### Reminder & Motivasi
-- ⏰ Reminder harian otomatis (jam bisa diubah per user)
-- 💬 Pesan motivasi kontekstual (berbeda pagi/malam)
-- 👋 Comeback mode saat user baru kembali setelah bolong
+- Reminder harian otomatis (jam bisa diubah per user)
+- Pesan motivasi kontekstual (berbeda pagi/malam)
+- Comeback mode saat user kembali setelah beberapa hari tidak aktif
 
 ### Profile
-- 👤 Lihat profile dan ringkasan statistik
-- ⏰ Ubah jam reminder personal
-- 📊 Total check-in, hari aktif, streak terpanjang
+- Lihat profile dan ringkasan statistik
+- Ubah jam reminder personal
+- Total check-in, hari aktif, streak terpanjang
 
 ### Keamanan & Stabilitas
-- 🛡 Error handler global
-- 🚦 Rate limiter (anti spam)
-- 📝 Logging ke file (`bot.log` dan `bot_error.log`)
-- ✅ Validasi input yang ketat
-- 🔄 Graceful shutdown
+- Error handler global
+- Rate limiter (anti spam)
+- Logging ke file (`bot.log` dan `bot_error.log`)
+- Validasi input yang ketat
+- Graceful shutdown
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Teknologi | Fungsi |
 |-----------|--------|
@@ -65,310 +65,147 @@ Track habit, pantau streak, dan tetap konsisten setiap hari.
 
 ---
 
-## 📁 Struktur Project
+## Struktur Project
 
 ```text
 habit_tracker_bot/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── bot.py
-│   ├── config.py
+│   ├── bot.py                 # Entry point: setup bot, middleware, scheduler
+│   ├── config.py              # Konfigurasi dari environment variable
 │   │
-│   ├── handlers/
-│   │   ├── __init__.py
-│   │   ├── start.py
-│   │   ├── habits.py
-│   │   ├── habit_edit.py
-│   │   ├── checkin.py
-│   │   ├── stats.py
-│   │   ├── summary.py
-│   │   └── profile.py
+│   ├── handlers/              # Layer presentasi (menerima update dari Telegram)
+│   │   ├── start.py           # /start, /menu, /help, onboarding
+│   │   ├── checkin.py         # Check-in harian
+│   │   ├── habits.py          # Tambah habit (FSM multi-langkah)
+│   │   ├── habit_edit.py      # Detail, riwayat, edit, jeda, hapus habit
+│   │   ├── stats.py           # Statistik harian & mingguan
+│   │   ├── summary.py         # Ringkasan harian
+│   │   └── profile.py         # Profile & ubah jam reminder
 │   │
-│   ├── keyboards/
-│   │   ├── __init__.py
-│   │   ├── inline.py
-│   │   └── reply.py
+│   ├── keyboards/             # Inline & reply keyboard
 │   │
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── habit_service.py
-│   │   ├── streak_service.py
-│   │   ├── stats_service.py
-│   │   ├── reminder_service.py
-│   │   └── motivation_service.py
+│   ├── middlewares/           # Logging, rate limiter, error handler
 │   │
-│   ├── database/
-│   │   ├── __init__.py
-│   │   ├── init_db.py
-│   │   ├── queries.py
-│   │   └── models.py
+│   ├── services/              # Logika bisnis
+│   │   ├── habit_service.py   # CRUD habit & check-in
+│   │   ├── streak_service.py  # Perhitungan streak
+│   │   ├── stats_service.py   # Statistik & ringkasan
+│   │   ├── motivation_service.py  # Pesan motivasi kontekstual
+│   │   └── reminder_service.py    # Scheduler & broadcast
 │   │
-│   ├── middlewares/
-│   │   ├── __init__.py
-│   │   ├── error_handler.py
-│   │   ├── rate_limiter.py
-│   │   └── logging_middleware.py
+│   ├── database/              # Akses data (SQLite + aiosqlite)
 │   │
-│   └── utils/
-│       ├── __init__.py
-│       ├── dates.py
-│       ├── enums.py
-│       └── helpers.py
+│   └── utils/                 # Helper tanggal, validasi, formatting
 │
-├── data/
-│   └── habits.db
-│
-├── logs/
-│   ├── bot.log
-│   └── bot_error.log
-│
-├── .env
-├── .env.example
-├── .gitignore
+├── logs/                      # File log berjalan
+├── data/                      # Database SQLite (dibuat otomatis)
+├── .env                       # Konfigurasi lokal (tidak di-commit)
 ├── requirements.txt
-├── CHANGELOG.md
 └── README.md
 ```
 
 ---
 
-## 🚀 Cara Install dan Menjalankan
+## Cara Menjalankan
 
-### 1. Clone repository
+### 1. Buat bot di Telegram
+
+1. Buka [@BotFather](https://t.me/BotFather)
+2. Kirim `/newbot` dan ikuti instruksinya
+3. Salin token bot yang diberikan
+
+### 2. Siapkan environment
 
 ```bash
-git clone https://github.com/username/habit-tracker-bot.git
-cd habit-tracker-bot
+cp .env.example .env
+# isi BOT_TOKEN dengan token dari BotFather
 ```
 
-### 2. Buat virtual environment
-
-```bash
-python -m venv venv
-```
-
-### 3. Aktifkan virtual environment
-
-**Windows PowerShell**
-```bash
-venv\Scripts\Activate.ps1
-```
-
-**Windows CMD**
-```bash
-venv\Scripts\activate.bat
-```
-
-**Mac/Linux**
-```bash
-source venv/bin/activate
-```
-
-### 4. Install dependencies
+### 3. Install dependency
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Buat bot di Telegram
-
-1. Buka Telegram
-2. Cari `@BotFather`
-3. Kirim `/newbot`
-4. Ikuti instruksi sampai mendapatkan token
-5. Salin token bot
-
-### 6. Konfigurasi environment
-
-Salin file contoh:
-
-```bash
-cp .env.example .env
-```
-
-Lalu buka file `.env` dan isi token:
-
-```env
-BOT_TOKEN=token_dari_botfather
-```
-
-### 7. Jalankan bot
+### 4. Jalankan bot
 
 ```bash
 python -m app.bot
 ```
 
-Bot siap. Buka Telegram dan kirim `/start` ke bot kamu.
+Log tersimpan di folder `logs/`.
 
 ---
 
-## ⚙️ Konfigurasi
+## Konfigurasi (.env)
 
-Semua konfigurasi ada di file `.env`.
-
-| Variable | Default | Keterangan |
+| Variabel | Default | Keterangan |
 |----------|---------|------------|
-| `BOT_TOKEN` | wajib diisi | Token dari BotFather |
-| `TIMEZONE` | `Asia/Jakarta` | Timezone bot |
-| `REMINDER_TIME` | `19:00` | Jam reminder default |
-| `COMEBACK_THRESHOLD` | `2` | Hari bolong sebelum comeback mode aktif |
+| `BOT_TOKEN` | - | Token bot dari BotFather (wajib) |
+| `DB_PATH` | `data/habits.db` | Lokasi file database SQLite |
+| `TIMEZONE` | `Asia/Jakarta` | Zona waktu bot |
+| `REMINDER_TIME` | `19:00` | Jam reminder harian default |
+| `COMEBACK_THRESHOLD` | `2` | Hari tidak aktif sebelum mode comeback aktif |
 
 ---
 
-## 📱 Command Bot
+## Perintah Bot
 
-| Command | Fungsi |
-|---------|--------|
+Bot memiliki menu perintah resmi (muncul otomatis di kolom input Telegram):
+
+| Perintah | Fungsi |
+|----------|--------|
 | `/start` | Buka menu utama |
-| `/menu` | Kembali ke menu utama |
-| `/help` | Tampilkan bantuan |
-| `/profile` | Lihat profile |
-| `/statistik` | Lihat statistik |
+| `/checkin` | Check-in hari ini |
+| `/habits` | Daftar habit |
+| `/statistik` | Statistik harian dan mingguan |
 | `/summary` | Ringkasan hari ini |
+| `/profile` | Profile dan pengaturan |
+| `/help` | Bantuan |
 
 ---
 
-## 🕐 Jadwal Otomatis
+## Bahasa Visual
 
-| Waktu | Aktivitas |
-|-------|-----------|
-| `00:05` | Reset streak yang putus |
-| `19:00` | Daily reminder |
-| `20:00` setiap Minggu | Weekly report |
-| `21:00` | Daily summary |
+Bot menggunakan sistem simbol teks monokrom (bukan emoji) agar tampil
+konsisten, modern, dan profesional di semua perangkat:
 
----
+| Simbol | Makna |
+|--------|-------|
+| `[x]` | Habit sudah di-check-in |
+| `[ ]` | Habit belum di-check-in |
+| `[·]` | Habit tidak dijadwalkan hari ini / dijeda |
+| `█` `░` | Progress bar |
+| `■` `□` `·` | Kalender riwayat 30 hari |
 
-## 🧪 Cara Testing Singkat
-
-1. Jalankan bot:
-   ```bash
-   python -m app.bot
-   ```
-
-2. Buka Telegram dan kirim:
-   ```text
-   /start
-   ```
-
-3. Coba alur berikut:
-   - Tambah habit
-   - Lihat daftar habit
-   - Check-in habit hari ini
-   - Lihat statistik
-   - Buka profile
-   - Ubah reminder
-   - Pause lalu resume habit
-   - Lihat riwayat 30 hari
+Semua pesan dikirim dengan HTML parse mode dan input user di-escape,
+sehingga aman dari karakter yang merusak format.
 
 ---
 
-## 🖥 Deployment ke VPS
+## Jadwal Otomatis (Scheduler)
 
-### 1. Setup server Ubuntu
-
-```bash
-apt update && apt upgrade -y
-apt install python3.11 python3.11-venv git -y
-```
-
-### 2. Clone project dan setup environment
-
-```bash
-cd /opt/apps
-git clone https://github.com/username/habit-tracker-bot.git
-cd habit-tracker-bot
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3. Buat file `.env`
-
-```bash
-nano .env
-```
-
-Isi token dan konfigurasi sesuai kebutuhan.
-
-### 4. Buat systemd service
-
-```bash
-nano /etc/systemd/system/habit-bot.service
-```
-
-Isi dengan:
-
-```ini
-[Unit]
-Description=Habit Tracker Telegram Bot
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/apps/habit-tracker-bot
-ExecStart=/opt/apps/habit-tracker-bot/venv/bin/python -m app.bot
-Restart=always
-RestartSec=10
-Environment=PYTHONUNBUFFERED=1
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### 5. Aktifkan service
-
-```bash
-systemctl daemon-reload
-systemctl enable habit-bot
-systemctl start habit-bot
-```
-
-### 6. Pantau log
-
-```bash
-journalctl -u habit-bot -f
-```
+| Task | Waktu | Fungsi |
+|------|-------|--------|
+| Morning reset | 00:05 | Reset streak yang terputus |
+| Daily reminder | sesuai `REMINDER_TIME` | Ingatkan check-in yang belum selesai |
+| Daily summary | 21:00 | Kirim ringkasan harian |
+| Weekly report | Minggu 20:00 | Kirim laporan mingguan |
 
 ---
 
-## 📝 Catatan
+## Roadmap (Ide Pengembangan)
 
-- File `.env` **jangan di-upload** ke GitHub
-- Database SQLite akan otomatis dibuat saat bot pertama kali dijalankan
-- Folder `logs/` digunakan untuk menyimpan log aktivitas dan error
-- Bot berjalan selama terminal atau server masih aktif
-- Untuk penggunaan 24 jam, disarankan deploy ke VPS
-
----
-
-## 📌 Status Project
-
-Project ini dibuat sebagai Telegram bot yang serius, modular, dan realistis untuk penggunaan sehari-hari.
-
-Fokus utamanya:
-- membantu user tetap konsisten
-- mempermudah check-in harian
-- memberi insight lewat statistik dan streak
-- tetap nyaman dipakai tanpa terasa berisik
+- Custom schedule (pilih hari bebas per habit)
+- Target & pengingat streak (misal: "3 hari lagi mencapai 30 hari")
+- Ekspor riwayat (CSV / JSON)
+- Mode gelap-friendly layout & opsi bahasa
+- Webhook deployment (bukan long polling)
+- Multi-bahasa (i18n)
 
 ---
 
-## 🔮 Pengembangan Selanjutnya
-
-Beberapa ide pengembangan lanjutan:
-- timezone per user
-- target mingguan fleksibel
-- kategori habit
-- export data
-- dashboard web
-- notifikasi yang lebih personal
-- penyimpanan database yang lebih besar seperti PostgreSQL
-
----
-
-## 📄 Lisensi
-
-Project ini dibuat untuk keperluan personal dan pembelajaran.
+Dikembangkan dengan Python, aiogram v3, dan SQLite.
+Dokumentasi arsitektur lengkap: [ARSITEKTUR_SISTEM.md](ARSITEKTUR_SISTEM.md)

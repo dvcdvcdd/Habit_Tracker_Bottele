@@ -84,7 +84,7 @@ class RateLimiterMiddleware(BaseMiddleware):
         try:
             if isinstance(event, CallbackQuery):
                 await event.answer(
-                    text       = "Pelan-pelan ya. 😅",
+                    text       = "Mohon tunggu sebentar sebelum melanjutkan.",
                     show_alert = False,
                 )
         except Exception:

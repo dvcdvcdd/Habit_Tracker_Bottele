@@ -15,11 +15,13 @@ from app.keyboards.inline import (
 )
 from app.keyboards.reply import kb_cancel, kb_remove
 from app.services.habit_service import add_habit, format_schedule_display
-from app.utils.helpers import sanitize_text, is_valid_habit_name, escape_markdown
+from app.utils.helpers import sanitize_text, is_valid_habit_name, esc
 
 logger = logging.getLogger(__name__)
 
 router = Router()
+
+PARSE_MODE = "HTML"
 
 
 class AddHabitStates(StatesGroup):
@@ -34,16 +36,16 @@ async def handle_add_habit_start(
 ) -> None:
     await callback.message.edit_text(
         text=(
-            "➕ *Tambah Habit Baru*\n\n"
-            "Ketik nama habit yang ingin kamu track.\n\n"
+            "<b>Tambah Habit Baru</b>\n\n"
+            "Ketik nama habit yang ingin kamu jaga.\n\n"
             "Contoh:\n"
             "• Olahraga\n"
             "• Baca buku 20 menit\n"
             "• Minum 8 gelas air\n"
             "• Meditasi\n\n"
-            "_Maksimal 50 karakter._"
+            "<i>Maksimal 50 karakter.</i>"
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
     )
 
     await callback.message.answer(
@@ -62,12 +64,15 @@ async def handle_habit_name_input(
 ) -> None:
     user_input = message.text.strip() if message.text else ""
 
-    if user_input == "❌ Batal":
+    if user_input == "Batal":
         await state.clear()
-        await message.answer(text="Dibatalkan.", reply_markup=kb_remove())
         await message.answer(
-            text="Kamu di menu utama:",
-            parse_mode="Markdown",
+            text="Pembuatan habit dibatalkan.",
+            reply_markup=kb_remove(),
+        )
+        await message.answer(
+            text="<i>Kamu berada di menu utama.</i>",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
         return
@@ -77,26 +82,26 @@ async def handle_habit_name_input(
 
     if not is_valid:
         await message.answer(
-            text=f"⚠️ {error_msg}\n\nCoba lagi:",
+            text=f"<b>{esc(error_msg)}</b>\n\nSilakan coba lagi:",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_cancel(),
         )
         return
 
     await state.update_data(habit_name=clean_name)
-    safe_name = escape_markdown(clean_name)
 
     await message.answer(
-        text=f'Nama habit: *"{safe_name}"*',
-        parse_mode="Markdown",
+        text=f'Nama habit: <b>"{esc(clean_name)}"</b>',
+        parse_mode=PARSE_MODE,
         reply_markup=kb_remove(),
     )
 
     await message.answer(
         text=(
-            "📅 *Pilih jadwal habit ini:*\n\n"
-            "Kapan kamu ingin melakukan habit ini?"
+            "<b>Pilih Jadwal</b>\n\n"
+            "Kapan kamu akan melakukan habit ini?"
         ),
-        parse_mode="Markdown",
+        parse_mode=PARSE_MODE,
         reply_markup=kb_schedule_picker(),
     )
 
@@ -118,7 +123,7 @@ async def handle_schedule_picked(
     habit_name = data.get("habit_name", "")
 
     if not habit_name:
-        await callback.answer("Terjadi kesalahan. Coba lagi.", show_alert=True)
+        await callback.answer("Terjadi kesalahan. Silakan coba lagi.", show_alert=True)
         await state.clear()
         return
 
@@ -135,18 +140,18 @@ async def handle_schedule_picked(
 
         await callback.message.edit_text(
             text=(
-                f"✅ *Habit berhasil ditambahkan!*\n\n"
-                f"📌 Nama    : *{habit_name}*\n"
-                f"📅 Jadwal  : {schedule_display}\n\n"
-                f"_Sekarang kamu bisa mulai check-in habit ini._"
+                "<b>Habit Berhasil Ditambahkan</b>\n\n"
+                f"Nama   : <b>{esc(habit_name)}</b>\n"
+                f"Jadwal : {schedule_display}\n\n"
+                "Kamu bisa mulai check-in sesuai jadwal habit ini."
             ),
-            parse_mode="Markdown",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
     else:
         await callback.message.edit_text(
-            text=f"⚠️ {message_text}",
-            parse_mode="Markdown",
+            text=f"<b>{esc(message_text)}</b>",
+            parse_mode=PARSE_MODE,
             reply_markup=kb_back_to_main(),
         )
 
